@@ -1,74 +1,70 @@
+import express from 'express'
+import graphqlHTTP from 'express-graphql'
+import {GraphQLSchema} from 'graphql'
+import {random} from 'lodash'
+
 import {
-  ObjectType,
-  InterfaceType,
+  buildNamedTypes,
+  buildObjectType,
   Field,
   Implements,
-  buildObjectType,
-  buildNamedTypes,
-} from '../../src/index';
-import { GraphQLSchema } from 'graphql';
-import { random } from 'lodash';
-import express from 'express';
-import graphqlHTTP from 'express-graphql';
+  InterfaceType,
+  ObjectType,
+} from '../../src/index'
 
 @InterfaceType()
 abstract class Fruit {
   @Field()
-  name!: string;
+  public name!: string
 
   @Field()
-  color!: string;
+  public color!: string
 }
 
 @ObjectType()
 @Implements(Fruit)
 class Apple {
-  name = 'Apple';
+  public name = 'Apple'
 
   @Field()
-  variety: string;
+  public variety: string
 
-  constructor(
-    public color: string,
-    variety: string,
-  ) {
-    this.variety = variety;
+  constructor(public color: string, variety: string) {
+    this.variety = variety
   }
 }
 
 @ObjectType()
 @Implements(Fruit)
 class Orange {
-  name = 'Orange';
-  color = 'Orange';
+  public name = 'Orange'
+  public color = 'Orange'
 }
 
 @ObjectType()
 class Query {
-  @Field({ type: Fruit })
-  async randomFruit() {
-    return !!random(1, false)
-      ? new Orange()
-      : new Apple('Red', 'Red Delicious');
+  @Field({type: Fruit})
+  public async randomFruit() {
+    return !!random(1, false) ? new Orange() : new Apple('Red', 'Red Delicious')
   }
 }
 
 const schema = new GraphQLSchema({
   query: buildObjectType(Query),
-  types: buildNamedTypes([
-    Apple,
-    Orange,
-  ]),
-});
+  types: buildNamedTypes([Apple, Orange]),
+})
 
-const app = express();
+const app = express()
 
-app.use('/graphql', graphqlHTTP({
-  schema,
-  context: undefined,
-  graphiql: true,
-}));
+app.use(
+  '/graphql',
+  graphqlHTTP({
+    schema,
+    context: undefined,
+    graphiql: true,
+  })
+)
 
 app.listen(4000, () => {
   console.log('Running on http://localhost:4000/graphql')
-});
+})

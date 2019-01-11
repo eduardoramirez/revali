@@ -1,13 +1,12 @@
-import { GraphQLScalarType, GraphQLScalarTypeConfig } from 'graphql';
-import { Wrapper } from './Wrapper';
+import {GraphQLScalarType, GraphQLScalarTypeConfig} from 'graphql'
 
-const scalarType = <TInternal, TExternal>(
-  config: GraphQLScalarTypeConfig<TInternal, TExternal>,
-): Wrapper<TInternal, GraphQLScalarType> => {
+import {Wrapper} from 'revali/wrappers/Wrapper'
+
+export function scalarType<TInternal, TExternal>(
+  config: GraphQLScalarTypeConfig<TInternal, TExternal>
+): Wrapper<TInternal, GraphQLScalarType> {
   return {
     graphQLType: new GraphQLScalarType(config),
-    type: null as any as TInternal,
+    type: (null as any) as TInternal,
   }
 }
-
-export default scalarType;

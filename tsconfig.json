@@ -1,29 +1,28 @@
 {
-  "exclude": [
-    "node_modules",
-    "./examples",
-    "./lib",
-    "./**/__tests__/",
-    "./typeChecking.ts"
-  ],
   "compilerOptions": {
-    "target": "es5",
+    "outDir": "lib",
     "module": "commonjs",
-    "lib": ["es5", "es6", "es7", "esnext"],
+    "target": "es6",
+    "lib": ["es2017", "esnext.asynciterable"],
     "declaration": true,
-    "sourceMap": false,
-    "outDir": "./lib",
-    "rootDir": "./src",
-    "strict": true,
-    "noImplicitAny": true,
+    "sourceMap": true,
     "moduleResolution": "node",
-    "typeRoots": [
-      "../node_modules/@types"
-    ],
-    "types": ["node"],
-    "esModuleInterop": true,
-    "experimentalDecorators": true,
+    "rootDir": "src",
+    "baseUrl": "src",
+    "paths": {
+      "revali/*": ["*"]
+    },
+    "forceConsistentCasingInFileNames": true,
+    "importHelpers": true,
+    "noImplicitReturns": true,
+    "noImplicitThis": true,
+    "noImplicitAny": true,
+    "strict": true,
+    "noUnusedLocals": true,
     "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "esModuleInterop": true,
     "resolveJsonModule": true
-  }
+  },
+  "exclude": ["node_modules", "examples", "lib", "typeChecking.ts", "**/__tests__/"]
 }
