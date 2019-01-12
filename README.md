@@ -152,6 +152,9 @@ import {Args, InputField, ObjectType, Field} from 'revali'
 class ServiceRequestArgs {
   @InputField({type: ServiceRequestInput})
   input!: ServiceRequestInput
+
+  @InputField()
+  option!: string
 }
 
 // ...
@@ -163,7 +166,7 @@ class Mutation {
   @Field({type: ServiceRequestPayload, args: ServiceRequestArgs})
   requestService(args, context) {
     // args instanceof ServiceRequestArgs === true
-    const {input} = args
+    const {input, option} = args
     // input instanceof ServiceRequestInput === true
     const {vehicleID} = input
     // ...
@@ -181,16 +184,16 @@ import {
   nullable,
   list,
   //...
-} from 'revali';
+} from 'revali'
 
 @Field({ type: nullable(TSGraphQLString) })
-nullableString!: string | null;
+nullableString!: string | null
 
 @Field({ type: list(TSGraphQLInt) })
-integerList!: number[];
+integerList!: number[]
 
 @Field({ type: nullable(list(nullable(Foo))) })
-maybeListOfMaybeFoo: Array<Foo | null> | null;
+maybeListOfMaybeFoo: Array<Foo | null> | null
 ```
 
 ### Enums
@@ -198,7 +201,7 @@ maybeListOfMaybeFoo: Array<Foo | null> | null;
 You can use TS enums in your code, and create a type for TS GraphQL to use.
 
 ```typescript
-import { enumType, EnumTypeCase, Field } from 'revali';
+import { enumType, EnumTypeCase, Field } from 'revali'
 
 enum Shape {
   Square,
@@ -207,16 +210,16 @@ enum Shape {
 }
 
 // In schema will be: Square, Circle, Triangle
-const ShapeType = enumType(Shape);
+const ShapeType = enumType(Shape)
 // Or if you want constant case in schema (SQUARE, CIRCLE, TRIANGLE)
 const ShapeType = enumType(Shape, {
   changeCase: EnumTypeCase.Constant,
-});
+})
 
 // In an object type...
 @Field({ type: ShapeType })
 shape() {
-  return Shape.Circle;
+  return Shape.Circle
 }
 ```
 
@@ -374,10 +377,10 @@ won't throw a compile time error, but will immediately throw at runtime. For exa
 
 ```typescript
 @Field()
-shape: 'circle' | 'square';
+shape: 'circle' | 'square'
 
 @Field()
-color = 'red';
+color = 'red'
 ```
 
 ###### Matching object types

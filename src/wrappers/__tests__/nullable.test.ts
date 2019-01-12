@@ -1,8 +1,8 @@
+import {GraphQLScalarType, GraphQLString} from 'graphql'
 import 'jest'
 
-import {GraphQLScalarType, GraphQLString} from 'graphql'
-import {nullable} from '../nullable'
-import {Wrapper} from '../Wrapper'
+import {nullable} from 'revali/wrappers/nullable'
+import {Wrapper} from 'revali/wrappers/Wrapper'
 
 const output = 'OUTPUT'
 

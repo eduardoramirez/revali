@@ -17,17 +17,20 @@ export interface ArgConfig<TValue> {
 export function Arg<TValue>(
   name: string,
   config?: Thunk<Partial<Omit<ArgConfig<TValue>, 'name'>>>
-) {
-  return <TName extends string>(prototype: Record<TName, TValue>, key: TName) => {
-    if (hasArg(prototype, key)) {
+): ParameterDecorator {
+  return (prototype: object, key: string | symbol) => {
+    const keyAsString = key.toString()
+
+    if (hasArg(prototype, keyAsString)) {
+      // TODO: better error message
       throw new Error('error, only one arg. Use @Args if multiple')
     }
 
-    storeArgConfig(prototype, key, () => {
+    storeArgConfig(prototype, keyAsString, () => {
       const resolved = config ? resolveThunk(config) : {}
 
       const defaultValue = resolved.defaultValue
-      const type = resolveType(resolved.type, prototype, key)
+      const type = resolveType(resolved.type, prototype, keyAsString)
 
       return {...resolved, defaultValue, type, name}
     })

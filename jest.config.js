@@ -1,5 +1,4 @@
 module.exports = {
-  modulePaths: ['<rootDir>/src/'],
   moduleNameMapper: {
     'revali/(.*)': '<rootDir>/src/$1',
   },

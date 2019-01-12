@@ -98,7 +98,7 @@ function buildResolver(
   config: FieldConfig<any>,
   field: string
 ): GraphQLFieldResolver<any, any> {
-  const resolve = createResolver(source, field) || defaultResolver(field)
+  const resolve = createResolver(source.prototype, field) || defaultResolver(field)
   const transformOutput = isWrapper(config.type) && config.type.transformOutput
 
   return ((src: any, args: ObjectLiteral, ...rest) => {

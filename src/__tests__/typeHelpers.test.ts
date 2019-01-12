@@ -10,17 +10,17 @@ import {
 } from 'graphql'
 import 'jest'
 
-import {buildInputType, buildNamedType, buildOutputType, TSGraphQLString} from '../..'
-import {Field} from '../decorators/Field'
-import {InputField} from '../decorators/InputField'
-import {InputObjectType} from '../decorators/InputObjectType'
-import {InterfaceType} from '../decorators/InterfaceType'
-import {ObjectType} from '../decorators/ObjectType'
-import {buildType} from '../typeHelpers'
-import {enumType} from '../wrappers/enumType'
-import {list} from '../wrappers/list'
-import {nullable} from '../wrappers/nullable'
-import {unionType} from '../wrappers/unionType'
+import {Field} from 'revali/field'
+import {InputField} from 'revali/inputField'
+import {InputObjectType} from 'revali/inputObject'
+import {InterfaceType} from 'revali/interface'
+import {ObjectType} from 'revali/object'
+import {buildInputType, buildNamedType, buildOutputType, buildType} from 'revali/typeHelpers'
+import {enumType} from 'revali/wrappers/enumType'
+import {list} from 'revali/wrappers/list'
+import {nullable} from 'revali/wrappers/nullable'
+import {TSGraphQLString} from 'revali/wrappers/scalars'
+import {unionType} from 'revali/wrappers/unionType'
 
 @ObjectType()
 class AnObjectType {
