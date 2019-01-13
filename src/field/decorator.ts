@@ -23,16 +23,9 @@ export type FieldResolverMethod<TContext, TReturn, TArgs> = (
   info: GraphQLResolveInfo
 ) => MaybePromise<TReturn | InterfaceImplementation<TReturn>>
 
-export type SingleArgFieldResolverMethod<TContext, TReturn> = (
-  arg: any,
-  context: TContext,
-  info: GraphQLResolveInfo
-) => MaybePromise<TReturn | InterfaceImplementation<TReturn>>
-
 export type FieldProperty<TContext, TReturn, TArgs> =
   | MaybePromise<TReturn>
   | FieldResolverMethod<TContext, TReturn, TArgs>
-  | SingleArgFieldResolverMethod<TContext, TReturn>
 
 function FieldDecorator<TReturn, TArgs, TContext>(
   config?: Thunk<Partial<FieldConfig<TReturn, TArgs, TContext>>>
