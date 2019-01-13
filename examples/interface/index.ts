@@ -1,16 +1,8 @@
 import express from 'express'
 import graphqlHTTP from 'express-graphql'
-import {GraphQLSchema} from 'graphql'
 import {random} from 'lodash'
 
-import {
-  buildNamedTypes,
-  buildObjectType,
-  Field,
-  Implements,
-  InterfaceType,
-  ObjectType,
-} from '../../src/index'
+import {compileSchema, Field, Implements, InterfaceType, ObjectType} from '../../src/index'
 
 @InterfaceType()
 abstract class Fruit {
@@ -49,10 +41,7 @@ class Query {
   }
 }
 
-const schema = new GraphQLSchema({
-  query: buildObjectType(Query),
-  types: buildNamedTypes([Apple, Orange]),
-})
+const schema = compileSchema({Query})
 
 const app = express()
 

@@ -1,14 +1,12 @@
 import express from 'express'
 import graphqlHTTP from 'express-graphql'
-import {GraphQLObjectType, GraphQLSchema} from 'graphql'
 import {random, times} from 'lodash'
+
 import {
-  Arg,
   Args,
-  buildFields,
+  compileSchema,
   enumType,
   Field,
-  fields,
   Implements,
   InputField,
   InputObjectType,
@@ -34,13 +32,13 @@ abstract class Node {
 
 @Args()
 class NodeArgs {
-  @Arg({type: TSGraphQLID})
+  @InputField({type: TSGraphQLID})
   public id!: ID
 }
 
 @Args()
 class NodesArgs {
-  @Arg({type: list(TSGraphQLID)})
+  @InputField({type: list(TSGraphQLID)})
   public ids!: ID[]
 }
 
@@ -49,17 +47,6 @@ const randomNode = (id: ID, recordContents: string = 'Lorem ipsum') => {
     ? new User(id, UserRole.STANDARD, 'John Doe')
     : new Record(id, recordContents, new User('foo', UserRole.ADMIN, 'John Doe'))
 }
-
-// Works well to modularize Query/Mutation fields
-const nodeQueryFields = fields({}, field => ({
-  node: field({type: Node, args: NodeArgs}, (root, {id}) => {
-    return randomNode(id)
-  }),
-
-  nodes: field({type: list(Node), args: NodesArgs}, (root, {ids}) => {
-    return ids.map(id => randomNode(id))
-  }),
-}))
 
 // --- User ---
 
@@ -122,7 +109,7 @@ class AddRecordInput {
 
 @Args()
 class AddRecordArgs {
-  @Arg({type: AddRecordInput})
+  @InputField({type: AddRecordInput})
   public input!: AddRecordInput
 }
 
@@ -136,13 +123,6 @@ class AddRecordPayload {
   }
 }
 
-const recordMutationFields = fields({}, field => ({
-  addRecord: field({type: AddRecordPayload, args: AddRecordArgs}, (root, {input}) => {
-    const createdBy = new User(input.userID, UserRole.ADMIN, 'John Smith')
-    return new AddRecordPayload(new Record('foo', input.contents, createdBy))
-  }),
-}))
-
 // -- Search --
 
 const SearchResult = unionType<User | Record>({
@@ -152,32 +132,40 @@ const SearchResult = unionType<User | Record>({
 
 @Args()
 class SearchResultArgs {
-  @Arg()
+  @InputField()
   public query!: string
 }
 
-const searchQueryFields = fields({}, field => ({
-  search: field({type: list(SearchResult), args: SearchResultArgs}, (root, {query}) => {
-    return times(10, n => randomNode(n, query))
-  }),
-}))
-
 // -- Schema/App --
 
-const Query = new GraphQLObjectType({
-  name: 'Query',
-  fields: () => buildFields([nodeQueryFields, searchQueryFields]),
-})
+@ObjectType()
+class Query {
+  @Field({type: list(SearchResult), args: SearchResultArgs})
+  public search({query}: SearchResultArgs) {
+    return times(10, n => randomNode(n, query))
+  }
 
-const Mutation = new GraphQLObjectType({
-  name: 'Mutation',
-  fields: () => buildFields([recordMutationFields]),
-})
+  @Field({type: Node, args: NodeArgs})
+  public node({id}: NodeArgs) {
+    return randomNode(id)
+  }
 
-const schema = new GraphQLSchema({
-  query: Query,
-  mutation: Mutation,
-})
+  @Field({type: list(Node), args: NodesArgs})
+  public nodes({ids}: NodesArgs) {
+    return ids.map(id => randomNode(id))
+  }
+}
+
+@ObjectType()
+class Mutation {
+  @Field({type: AddRecordPayload, args: AddRecordArgs})
+  public addRecord({input}: AddRecordArgs) {
+    const createdBy = new User(input.userID, UserRole.ADMIN, 'John Smith')
+    return new AddRecordPayload(new Record('foo', input.contents, createdBy))
+  }
+}
+
+const schema = compileSchema({Query, Mutation})
 
 const app = express()
 
@@ -190,6 +178,6 @@ app.use(
   })
 )
 
-app.listen(4000, () => {
-  console.log('Running on http://localhost:4000/graphql')
+app.listen(4001, () => {
+  console.log('Running on http://localhost:4001/graphql')
 })
