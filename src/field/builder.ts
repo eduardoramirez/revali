@@ -8,7 +8,7 @@ import {
 import {mapValues, reduce} from 'lodash'
 
 import {buildArg, getArgName, hasArg} from 'revali/arg'
-import {buildArgs} from 'revali/args'
+import {buildArgs, isArgs} from 'revali/args'
 import {getFieldConfig} from 'revali/field'
 import {FieldConfig, FieldResolverMethod} from 'revali/field'
 import {getImplements} from 'revali/implements'
@@ -76,17 +76,17 @@ export function buildFieldConfigMap(
 
 function buildArgMap(
   source: AnyConstructor<any>,
-  config: FieldConfig<any>,
+  config: FieldConfig<any, any, any>,
   field: string
 ): GraphQLFieldConfigArgumentMap | undefined {
-  if (hasArg(source, field) && config.args) {
+  if (config.arg && config.args) {
     // TODO: better error message
     throw new Error('You can only define a single parameter arg with @Arg or ')
   }
 
-  if (hasArg(source, field)) {
-    return resolveThunk(buildArg(source, field)!)
-  } else if (config.args) {
+  if (config.arg && hasArg(source, field)) {
+    return resolveThunk(buildArg(source, field, config.arg)!)
+  } else if (config.args && isArgs(config.args)) {
     return resolveThunk(buildArgs(config.args))
   }
 
@@ -95,7 +95,7 @@ function buildArgMap(
 
 function buildResolver(
   source: AnyConstructor<any>,
-  config: FieldConfig<any>,
+  config: FieldConfig<any, unknown, any>,
   field: string
 ): GraphQLFieldResolver<any, any> {
   const resolve = createResolver(source.prototype, field) || defaultResolver(field)
@@ -133,15 +133,20 @@ function createResolver(
 
 function mapArgsForResolver(
   source: AnyConstructor<any>,
-  config: FieldConfig<any>,
+  {arg, args}: FieldConfig<any, any>,
   field: string,
   passedInArgs: ObjectLiteral
 ): Maybe<ObjectLiteral | any> {
-  if (hasArg(source, field)) {
+  if (arg && !isWrapper(arg) && isEmptyConstructor(arg) && isInputObjectType(arg)) {
+    const inputConstructorTree = buildInputConstructorTree(arg)
+    return inputConstructorTree
+      ? instantiateInputConstructorTree(inputConstructorTree, passedInArgs)
+      : null
+  } else if (arg) {
     const argName = getArgName(source, field)!
     return passedInArgs[argName]
-  } else if (config.args) {
-    const inputConstructorTree = buildInputConstructorTree(config.args)
+  } else if (args) {
+    const inputConstructorTree = buildInputConstructorTree(args)
     return inputConstructorTree
       ? instantiateInputConstructorTree(inputConstructorTree, passedInArgs)
       : null

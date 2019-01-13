@@ -1,6 +1,6 @@
 import 'reflect-metadata'
 
-import {GraphQLOutputType, GraphQLResolveInfo, Thunk} from 'graphql'
+import {GraphQLInputType, GraphQLOutputType, GraphQLResolveInfo, Thunk} from 'graphql'
 
 import {storeFieldConfig} from 'revali/field'
 import {InterfaceImplementation} from 'revali/implements'
@@ -12,6 +12,7 @@ export interface FieldConfig<TReturn, TArgs = {}, TContext = any> {
   type: WrapperOrType<TReturn, GraphQLOutputType>
   description?: string
   args?: EmptyConstructor<TArgs>
+  arg?: WrapperOrType<TArgs, GraphQLInputType>
   isDeprecated?: boolean
   deprecationReason?: string
   context?: AnyConstructor<TContext>

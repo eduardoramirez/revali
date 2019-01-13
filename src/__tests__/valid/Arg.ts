@@ -1,19 +1,22 @@
-import {Arg, TSGraphQLID} from 'revali/index'
+import {Arg, Field, TSGraphQLString} from 'revali/index'
 
 class Data {
   public foo!: number
 }
 
 class Args {
-  public clazz(@Arg('id', {type: Data}) id: Data): string {
+  @Field({type: TSGraphQLString, arg: Data})
+  public clazz(@Arg('id') id: Data): string {
     return ''
   }
 
+  @Field({type: TSGraphQLString, arg: TSGraphQLString})
   public str(@Arg('id') id: string): string {
     return ''
   }
 
-  public wrapper(@Arg('id', {type: TSGraphQLID}) id: string | number): string {
+  @Field({type: TSGraphQLString, arg: TSGraphQLString})
+  public wrapper(@Arg('id') id: string | number): string {
     return ''
   }
 }

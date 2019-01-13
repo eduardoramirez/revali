@@ -8,10 +8,10 @@ const isArgsKey = Symbol('isArgs')
 export const getArgsConfig = getInputFieldConfig
 export const hasArgs = hasInputFieldConfig
 
-export const isArgs = (target: EmptyConstructor<any>) => {
+export function isArgs(target: EmptyConstructor<any>) {
   return !!Reflect.getMetadata(isArgsKey, target)
 }
 
-export const storeIsArgs = (target: EmptyConstructor<any>) => {
+export function storeIsArgs(target: EmptyConstructor<any>) {
   Reflect.defineMetadata(isArgsKey, true, target)
 }

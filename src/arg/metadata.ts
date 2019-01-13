@@ -1,10 +1,10 @@
 import 'reflect-metadata'
 
 import {ArgConfig} from 'revali/arg'
-import {ObjectLiteral} from 'revali/types'
+import {AnyConstructor, ObjectLiteral} from 'revali/types'
 import {Thunk} from 'revali/utils'
 
-const argsKey = Symbol('args')
+const argsKey = Symbol('arg')
 
 export function storeArgConfig(
   prototype: ObjectLiteral,
@@ -14,10 +14,14 @@ export function storeArgConfig(
   Reflect.defineMetadata(argsKey, config, prototype, key)
 }
 
-export function hasArg(prototype: ObjectLiteral, key: string): boolean {
+export function hasArgPrototype(prototype: ObjectLiteral, key: string): boolean {
   return !!Reflect.getMetadata(argsKey, prototype, key)
 }
 
-export function getArgConfig(prototype: ObjectLiteral, key: string): Thunk<ArgConfig<any>> {
-  return Reflect.getMetadata(argsKey, prototype, key)
+export function hasArg(target: AnyConstructor<any>, key: string): boolean {
+  return !!Reflect.getMetadata(argsKey, target.prototype, key)
+}
+
+export function getArgConfig(target: AnyConstructor<any>, key: string): Thunk<ArgConfig<any>> {
+  return Reflect.getMetadata(argsKey, target.prototype, key)
 }

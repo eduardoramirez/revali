@@ -3,6 +3,7 @@ import graphqlHTTP from 'express-graphql'
 import {random, times} from 'lodash'
 
 import {
+  Arg,
   Args,
   compileSchema,
   enumType,
@@ -140,6 +141,11 @@ class SearchResultArgs {
 
 @ObjectType()
 class Query {
+  @Field({type: list(SearchResult), arg: TSGraphQLString})
+  public search2(@Arg('query') query: string) {
+    return times(10, n => randomNode(n, query))
+  }
+
   @Field({type: list(SearchResult), args: SearchResultArgs})
   public search({query}: SearchResultArgs) {
     return times(10, n => randomNode(n, query))
