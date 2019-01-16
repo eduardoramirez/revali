@@ -1,3 +1,5 @@
+import 'reflect-metadata'
+
 import {GraphQLType} from 'graphql'
 import {isFunction} from 'lodash'
 

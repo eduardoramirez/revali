@@ -54,6 +54,6 @@ app.use(
   })
 )
 
-app.listen(4000, () => {
-  console.log('Running on http://localhost:4000/graphql')
+app.listen(4001, () => {
+  console.log('Running on http://localhost:4001/graphql')
 })

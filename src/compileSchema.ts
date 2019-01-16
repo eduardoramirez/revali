@@ -1,6 +1,7 @@
 import {GraphQLSchema} from 'graphql'
 
-import {buildObjectType} from 'revali/object'
+import {compileNamedTypes, compileObjectType} from 'revali/compiler'
+import {registrar} from 'revali/metadata'
 import {AnyConstructor} from 'revali/types'
 
 export interface CompileSchemaOptions {
@@ -9,7 +10,10 @@ export interface CompileSchemaOptions {
 }
 
 export function compileSchema({Query, Mutation}: CompileSchemaOptions) {
-  const query = buildObjectType(Query)
-  const mutation = Mutation ? buildObjectType(Mutation) : undefined
-  return new GraphQLSchema({query, mutation})
+  const query = compileObjectType(Query)
+  const mutation = Mutation ? compileObjectType(Mutation) : undefined
+
+  const types = compileNamedTypes(registrar.getUnreachableTypes())
+
+  return new GraphQLSchema({query, mutation, types})
 }

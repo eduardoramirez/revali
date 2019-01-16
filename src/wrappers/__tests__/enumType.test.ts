@@ -1,8 +1,8 @@
 import {graphql, GraphQLSchema} from 'graphql'
 import 'jest'
 
-import {Field} from 'revali/field'
-import {buildObjectType, ObjectType} from 'revali/object'
+import {compileObjectType} from 'revali/compiler'
+import {Field, ObjectType} from 'revali/decorators'
 import {enumType, EnumTypeCase} from 'revali/wrappers/enumType'
 
 enum IntEnum {
@@ -10,12 +10,6 @@ enum IntEnum {
   Bar,
   FooBar,
 }
-
-// enum StringEnum {
-//   Foo = 'foo',
-//   Bar = 'bar',
-//   FooBar = 'foobar',
-// }
 
 describe('TSGraphQLEnumType', () => {
   it('should generate GraphQLEnumType with correct keys', () => {
@@ -54,9 +48,7 @@ describe('TSGraphQLEnumType', () => {
       }
     }
 
-    const schema = new GraphQLSchema({
-      query: buildObjectType(Query),
-    })
+    const schema = new GraphQLSchema({query: compileObjectType(Query)})
 
     const result = await graphql(
       schema,

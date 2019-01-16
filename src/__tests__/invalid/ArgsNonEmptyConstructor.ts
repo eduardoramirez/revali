@@ -1,4 +1,4 @@
-import {Args} from '../../index'
+import {Args} from 'revali/index'
 
 @Args()
 class SomeArgs {

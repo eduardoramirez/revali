@@ -1,6 +1,6 @@
-import {ObjectLiteral} from 'revali/types'
+import {Thunk} from 'graphql'
 
-export type Thunk<T> = T | (() => T)
+import {ObjectLiteral} from 'revali/types'
 
 export function resolveThunk<T>(thunk: Thunk<T>): T {
   return typeof thunk === 'function' ? (thunk as () => T)() : thunk

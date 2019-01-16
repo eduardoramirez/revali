@@ -11,4 +11,16 @@ module.exports = {
   testPathIgnorePatterns: ['/node_modules/', '/lib/'],
   coverageDirectory: './coverage/',
   collectCoverageFrom: ['src/**/*.ts', '!**/*.d.ts', '!**/__tests__/**', '!testUtils.ts'],
+  globals: {
+    'ts-jest': {
+      tsConfig: {
+        emitDecoratorMetadata: true,
+        experimentalDecorators: true,
+        noUnusedLocals: false,
+        noUnusedParameters: false,
+        noImplicitReturns: false,
+        noFallthroughCasesInSwitch: true,
+      },
+    },
+  },
 }

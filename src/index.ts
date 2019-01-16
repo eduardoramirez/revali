@@ -2,14 +2,16 @@ import {addAlias} from 'module-alias'
 addAlias('revali', __dirname)
 
 // Decorators
-export {Arg} from 'revali/arg'
-export {Args} from 'revali/args'
-export {Field} from 'revali/field'
-export {Implements} from 'revali/implements'
-export {InputField} from 'revali/inputField'
-export {InputObjectType} from 'revali/inputObject'
-export {InterfaceType} from 'revali/interface'
-export {ObjectType} from 'revali/object'
+export {
+  Arg,
+  Args,
+  Field,
+  Implements,
+  InputField,
+  InputObjectType,
+  InterfaceType,
+  ObjectType,
+} from 'revali/decorators'
 
 // Helpers for composing types
 export {enumType, EnumTypeCase} from 'revali/wrappers/enumType'
@@ -31,7 +33,7 @@ export {
 } from 'revali/wrappers/scalars'
 
 // Library utilities
-export {fieldDecoratorForContext} from 'revali/field'
+export {fieldDecoratorForContext} from 'revali/decorators'
 
 // Compiler to graphql-js
 export {compileSchema} from 'revali/compileSchema'
