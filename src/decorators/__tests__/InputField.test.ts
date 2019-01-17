@@ -1,40 +1,51 @@
 import 'jest'
 
 import {InputField} from 'revali/decorators'
-import {registrar} from 'revali/metadata'
+import {Graph} from 'revali/graph'
 import {resolveThunk} from 'revali/utils'
 import {TSGraphQLString} from 'revali/wrappers/scalars'
 
 describe('InputField', () => {
-  it('creates an input field list in the registry', () => {
+  it('calls the right method on the registry', () => {
+    const spy = jest.spyOn(Graph.prototype, 'createInputField')
+
     class TestType {}
 
     class TestWithInputFields {
       @InputField()
       public foo!: string
 
+      @InputField()
+      public baz: string = 'a'
+
       @InputField({type: TestType})
       public bar!: TestType
     }
 
-    const inputFieldConfigList = registrar.getInputFieldMetadataList(TestWithInputFields)
-    expect(inputFieldConfigList).toHaveLength(2)
-    expect(resolveThunk(inputFieldConfigList[0])).toEqual({type: TSGraphQLString, name: 'foo'})
-    expect(resolveThunk(inputFieldConfigList[1])).toEqual({type: TestType, name: 'bar'})
-  })
+    expect(spy).toHaveBeenCalledTimes(3)
 
-  it('retrieves default value of input field defined in prototype', () => {
-    class TestWithInputFields {
-      @InputField()
-      public foo: string = 'bar'
-    }
+    let callParams = spy.mock.calls[0]
+    expect(callParams).toHaveLength(2)
+    expect(callParams[0]).toBe(TestWithInputFields)
+    let metadata = resolveThunk(callParams[1])
+    expect(metadata).toHaveProperty('name', 'foo')
+    expect(metadata).toHaveProperty('type', TSGraphQLString)
 
-    const inputFieldConfigList = registrar.getInputFieldMetadataList(TestWithInputFields)
-    expect(inputFieldConfigList).toHaveLength(1)
-    expect(resolveThunk(inputFieldConfigList[0])).toEqual({
-      type: TSGraphQLString,
-      name: 'foo',
-      defaultValue: 'bar',
-    })
+    callParams = spy.mock.calls[1]
+    expect(callParams).toHaveLength(2)
+    expect(callParams[0]).toBe(TestWithInputFields)
+    metadata = resolveThunk(callParams[1])
+    expect(metadata).toHaveProperty('name', 'baz')
+    expect(metadata).toHaveProperty('type', TSGraphQLString)
+    expect(metadata).toHaveProperty('defaultValue', 'a')
+
+    callParams = spy.mock.calls[2]
+    expect(callParams).toHaveLength(2)
+    expect(callParams[0]).toBe(TestWithInputFields)
+    metadata = resolveThunk(callParams[1])
+    expect(metadata).toHaveProperty('name', 'bar')
+    expect(metadata).toHaveProperty('type', TestType)
+
+    spy.mockRestore()
   })
 })

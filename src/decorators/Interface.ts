@@ -1,13 +1,13 @@
-import {registrar} from 'revali/metadata'
+import {graph} from 'revali/graph'
 import {AnyConstructor} from 'revali/types'
 
-export interface InterfaceTypeConfig {
+export interface InterfaceTypeOptions {
   name?: string
   description?: string
 }
 
-export function InterfaceType(config: InterfaceTypeConfig = {}) {
+export function InterfaceType(config: InterfaceTypeOptions = {}) {
   return (target: AnyConstructor<any>) => {
-    registrar.storeInterfaceMetadata(target, {...config, name: config.name || target.name})
+    graph.createInterface(target, {...config, name: config.name || target.name})
   }
 }

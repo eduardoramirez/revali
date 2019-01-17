@@ -10,82 +10,89 @@ import {
 } from 'graphql'
 
 import {compileInputObjectType, compileInterfaceType, compileObjectType} from 'revali/compiler'
-import {registrar} from 'revali/metadata'
-import {Constructor} from 'revali/types'
-import {isWrapper, resolveWrapper, WrapperOrType} from 'revali/wrappers/Wrapper'
+import {isInputObjectNode, isInterfaceNode, isObjectNode} from 'revali/graph'
+import {isWrapper, resolveWrapper, WrapperOrNode} from 'revali/wrappers/Wrapper'
 
 interface CompileTypeDefinitions {
-  (target: WrapperOrType<any, GraphQLType>, nonNull?: false): GraphQLType
+  (target: WrapperOrNode<any, GraphQLType>, nonNull?: false): GraphQLType
 
-  (target: WrapperOrType<any, GraphQLType>, nonNull: true): GraphQLNonNull<GraphQLType>
+  (target: WrapperOrNode<any, GraphQLType>, nonNull: true): GraphQLNonNull<GraphQLType>
 
-  (target: WrapperOrType<any, GraphQLType>, nonNull?: boolean):
+  (target: WrapperOrNode<any, GraphQLType>, nonNull?: boolean):
     | GraphQLType
     | GraphQLNonNull<GraphQLType>
 }
 
 export const compileType = ((
-  target: WrapperOrType<any, GraphQLType>,
+  nodeOrWrapper: WrapperOrNode<any, GraphQLType>,
   nonNull?: boolean
 ): GraphQLType | GraphQLNonNull<GraphQLType> => {
-  if (isWrapper(target)) {
-    return resolveWrapper(target, nonNull)
+  if (isWrapper(nodeOrWrapper)) {
+    return resolveWrapper(nodeOrWrapper, nonNull)
   }
 
   let type
-  if (registrar.isInputObjectType(target)) {
-    type = compileInputObjectType(target)
+  if (isInputObjectNode(nodeOrWrapper)) {
+    type = compileInputObjectType(nodeOrWrapper)
   }
 
-  if (registrar.isObjectType(target)) {
-    type = compileObjectType(target)
+  if (isObjectNode(nodeOrWrapper)) {
+    type = compileObjectType(nodeOrWrapper)
   }
 
-  if (registrar.isInterfaceType(target)) {
-    type = compileInterfaceType(target)
+  if (isInterfaceNode(nodeOrWrapper)) {
+    type = compileInterfaceType(nodeOrWrapper)
   }
 
   if (type) {
     return nonNull ? new GraphQLNonNull(type) : type
   }
 
-  throw new Error(`Type not found for ${target.name}`)
+  // TODO: better error
+  throw new Error(`Type not found for`)
+  // throw new Error(`Type not found for ${target.name}`)
 }) as CompileTypeDefinitions
 
 export const compileNamedType = (
-  target: WrapperOrType<any, GraphQLNamedType>
+  nodeOrWrapper: WrapperOrNode<any, GraphQLNamedType>
 ): GraphQLNamedType => {
-  const type = compileType(target)
+  const type = compileType(nodeOrWrapper)
   if (!type || !isNamedType(type)) {
-    throw new Error(`Named type not found for ${(target as Constructor<any>).name}`)
+    // TODO: better error msg
+    throw new Error(`Named type not found for`)
+    // throw new Error(`Named type not found for ${(target as Constructor<any>).name}`)
   }
   return type
 }
 
 export const compileNamedTypes = (
-  targets: Array<WrapperOrType<any, GraphQLNamedType>>
+  nodesOrWrappers: Array<WrapperOrNode<any, GraphQLNamedType>>
 ): GraphQLNamedType[] => {
-  return targets.map(compileNamedType)
+  return nodesOrWrappers.map(compileNamedType)
 }
 
 export const compileOutputType = (
-  target: WrapperOrType<any, GraphQLOutputType>,
+  nodeOrWrapper: WrapperOrNode<any, GraphQLOutputType>,
   nonNull?: boolean
 ): GraphQLOutputType => {
-  const type = compileType(target, nonNull)
+  const type = compileType(nodeOrWrapper, nonNull)
   if (!type || !isOutputType(type)) {
-    throw new Error(`Output type not found for ${(target as Constructor<any>).name}`)
+    // TODO: better error msg
+    throw new Error(`Output type not found for`)
+    // throw new Error(`Output type not found for ${(target as Constructor<any>).name}`)
   }
   return type
 }
 
 export const compileInputType = (
-  target: WrapperOrType<any, GraphQLInputType>,
+  nodeOrWrapper: WrapperOrNode<any, GraphQLInputType>,
   nonNull?: boolean
 ): GraphQLInputType => {
-  const type = compileType(target, nonNull)
+  const type = compileType(nodeOrWrapper, nonNull)
   if (!type || !isInputType(type)) {
-    throw new Error(`Input type not found for ${(target as Constructor<any>).name}`)
+    // TODO: better error msg
+    throw new Error(`Input type not found for`)
+    // throw new Error(`Input type not found for ${(target as Constructor<any>).name}`)
   }
   return type
 }

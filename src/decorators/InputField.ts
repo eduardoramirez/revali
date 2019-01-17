@@ -1,18 +1,18 @@
 import {GraphQLInputType, Thunk} from 'graphql'
 
-import {registrar} from 'revali/metadata'
+import {graph} from 'revali/graph'
 import {Constructor} from 'revali/types'
 import {resolveThunk, resolveType} from 'revali/utils'
 import {WrapperOrType} from 'revali/wrappers/Wrapper'
 
-export interface InputFieldConfig<TValue> {
+export interface InputFieldOptions<TValue> {
   type: WrapperOrType<TValue, GraphQLInputType>
   defaultValue?: TValue
   description?: string
 }
 
 export type PrimitiveInputFieldConfig<TValue> = Exclude<
-  InputFieldConfig<TValue>,
+  InputFieldOptions<TValue>,
   {type: WrapperOrType<TValue, GraphQLInputType>}
 >
 
@@ -24,18 +24,13 @@ const getDefaultValueFromPrototype = (prototype: Record<any, any>, key: string) 
   return new Args()[key]
 }
 
-function InputFieldDecorator<TValue>(config?: Thunk<Partial<InputFieldConfig<TValue>>>) {
+function InputFieldDecorator<TValue>(config?: Thunk<Partial<InputFieldOptions<TValue>>>) {
   return <TName extends string>(prototype: Record<TName, TValue>, key: TName) => {
-    registrar.storeInputFieldMetadata(prototype, () => {
+    graph.createInputField(prototype.constructor, () => {
       const resolved = (config && resolveThunk(config)) || {}
       const defaultValue = resolved.defaultValue || getDefaultValueFromPrototype(prototype, key)
       const type = resolveType(resolved.type, prototype, key)
-      return {
-        ...resolved,
-        defaultValue,
-        type,
-        name: key,
-      }
+      return {...resolved, defaultValue, type, name: key}
     })
   }
 }
@@ -49,7 +44,7 @@ export interface InputFieldDefinitions {
     key: TName
   ) => void
 
-  <TValue>(config: Thunk<InputFieldConfig<TValue>>): <TName extends string>(
+  <TValue>(config: Thunk<InputFieldOptions<TValue>>): <TName extends string>(
     prototype: Record<TName, TValue>,
     key: TName
   ) => void

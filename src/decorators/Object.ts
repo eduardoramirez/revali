@@ -1,13 +1,13 @@
-import {registrar} from 'revali/metadata'
+import {graph} from 'revali/graph'
 import {AnyConstructor} from 'revali/types'
 
-export interface ObjectTypeConfig {
+export interface ObjectTypeOptions {
   name?: string
   description?: string
 }
 
-export function ObjectType<TSource>(config: ObjectTypeConfig = {}) {
+export function ObjectType<TSource>(config: ObjectTypeOptions = {}) {
   return (target: AnyConstructor<TSource>) => {
-    registrar.storeObjectMetadata(target, {...config, name: config.name || target.name})
+    graph.createObject(target, {...config, name: config.name || target.name})
   }
 }

@@ -1,33 +1,16 @@
 import 'jest'
 
-import {Field, Implements, InterfaceType, ObjectType} from 'revali/decorators'
-import {registrar} from 'revali/metadata'
+import {ObjectType} from 'revali/decorators'
+import {Graph} from 'revali/graph'
 
 describe('ObjectType', () => {
-  it('writes the object metadata to the registry', () => {
+  it('calls the registry with the right object params', () => {
+    const spy = jest.spyOn(Graph.prototype, 'createObject')
+
     @ObjectType()
     class TestObject {}
 
-    expect(registrar.getObjectMetadata(TestObject)).toHaveProperty('name', 'TestObject')
-  })
-
-  it('extracts interfaces from inheritance chain', () => {
-    @InterfaceType()
-    abstract class Foo {
-      @Field()
-      public foo!: string
-    }
-
-    @ObjectType()
-    @Implements(Foo)
-    class A {
-      public foo!: string
-    }
-
-    @ObjectType()
-    class B extends A {}
-
-    expect(registrar.getInterfaceMetadata(Foo)).toHaveProperty('implementers', [A, B])
-    expect(registrar.getObjectMetadata(B)).toHaveProperty('interfaces', [Foo])
+    expect(spy).toBeCalledWith(TestObject, {name: 'TestObject'})
+    spy.mockRestore()
   })
 })

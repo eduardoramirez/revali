@@ -1,8 +1,8 @@
-import {registrar} from 'revali/metadata'
+import {graph} from 'revali/graph'
 import {EmptyConstructor} from 'revali/types'
 
 export function Args() {
   return (target: EmptyConstructor<any>) => {
-    registrar.storeIsArgs(target)
+    graph.createArgs(target)
   }
 }

@@ -1,26 +1,25 @@
 import {GraphQLObjectType} from 'graphql'
-import {memoize} from 'lodash'
+import {flatMap, memoize} from 'lodash'
 
 import {compileFieldConfigMap, compileInterfaceType} from 'revali/compiler'
-import {registrar} from 'revali/metadata'
-import {AnyConstructor} from 'revali/types'
+import {ObjectNode} from 'revali/graph'
 
 export const compileObjectType = memoize(
-  (source: AnyConstructor<any>): GraphQLObjectType => {
-    const metadata = registrar.getObjectMetadata(source)
-    if (!metadata || !registrar.isObjectType(source)) {
-      throw new Error(`Object type config not found for ${source.name}`)
-    }
+  ({implementNodes, metadata, fieldNodes}: ObjectNode): GraphQLObjectType => {
+    const inheritedFieldNodes = flatMap(
+      implementNodes,
+      ({interfaceNode}) => interfaceNode.fieldNodes
+    )
 
-    const {name, description, interfaces} = metadata
+    const allFieldNodes = [...fieldNodes, ...inheritedFieldNodes]
+
+    const {name, description} = metadata
     const type = new GraphQLObjectType({
-      name: name || source.name,
-      interfaces: interfaces.map(compileInterfaceType),
-      fields: compileFieldConfigMap(source),
+      name,
       description,
+      interfaces: implementNodes.map(({interfaceNode}) => compileInterfaceType(interfaceNode)),
+      fields: compileFieldConfigMap(allFieldNodes),
     })
-
-    registrar.markObjectCompiled(source)
 
     return type
   }

@@ -1,16 +1,16 @@
 import 'jest'
 
 import {InputObjectType} from 'revali/decorators'
-import {registrar} from 'revali/metadata'
+import {Graph} from 'revali/graph'
 
 describe('InputObjectType', () => {
-  it('writes the input object metadata to the registry', () => {
+  it('calls the write registry fucntion', () => {
+    const spy = jest.spyOn(Graph.prototype, 'createInputObject')
+
     @InputObjectType()
     class TestInputObject {}
 
-    expect(registrar.getInputObjectMetadata(TestInputObject)).toHaveProperty(
-      'name',
-      'TestInputObject'
-    )
+    expect(spy).toBeCalledWith(TestInputObject, {name: 'TestInputObject'})
+    spy.mockRestore()
   })
 })

@@ -17,11 +17,8 @@ export {
 export {enumType, EnumTypeCase} from 'revali/wrappers/enumType'
 export {unionType} from 'revali/wrappers/unionType'
 export {scalarType} from 'revali/wrappers/scalarType'
-
-// Type wrapper utilities
 export {list} from 'revali/wrappers/list'
 export {nullable} from 'revali/wrappers/nullable'
-export {unsafeWrapType, wrapScalar} from 'revali/wrappers/Wrapper'
 
 // Built-in scalar types
 export {
@@ -34,6 +31,7 @@ export {
 
 // Library utilities
 export {fieldDecoratorForContext} from 'revali/decorators'
+export {unsafeWrapType, wrapScalar} from 'revali/wrappers/Wrapper'
 
 // Compiler to graphql-js
 export {compileSchema} from 'revali/compileSchema'

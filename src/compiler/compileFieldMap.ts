@@ -6,9 +6,15 @@ import {
   Thunk,
 } from 'graphql'
 
-import {compileArg, compileArgs, compileOutputType, getArgName} from 'revali/compiler'
+import {compileArg, compileArgs, compileOutputType} from 'revali/compiler'
 import {FieldResolverMethod} from 'revali/decorators/Field'
-import {FieldMetadata, registrar} from 'revali/metadata'
+import {
+  ArgsNode,
+  FieldNode,
+  FieldNodeMetadata,
+  InputObjectNode,
+  isInputObjectNode,
+} from 'revali/graph'
 import {
   AnyConstructor,
   EmptyConstructor,
@@ -17,7 +23,7 @@ import {
   MaybePromise,
   ObjectLiteral,
 } from 'revali/types'
-import {getConstructorChain, resolveThunk} from 'revali/utils'
+import {resolveThunk} from 'revali/utils'
 import {isWrapper} from 'revali/wrappers/Wrapper'
 
 export type FieldResolver<TSource, TContext, TReturn, TArgs = {}> = (
@@ -36,29 +42,18 @@ interface InputConstructorNode<T> {
   children: InputConstructorChildren
 }
 
-export function compileFieldConfigMap(
-  source: AnyConstructor<any>
-): Thunk<GraphQLFieldConfigMap<any, any>> {
+export function compileFieldConfigMap(nodes: FieldNode[]): Thunk<GraphQLFieldConfigMap<any, any>> {
   return () => {
-    const chain = getConstructorChain(source)
-    const interfaces = chain
-      .map(c => registrar.getInterfacesImplemented(c))
-      .reduce((acc, ifaces) => acc.concat(ifaces)) // flatten
+    return nodes.reduce(
+      (configMap, {target, metadata}) => {
+        const resolvedMetadata = resolveThunk(metadata)
+        const {name, type, ...rest} = resolvedMetadata
 
-    const objects = chain.concat(interfaces).reverse()
-
-    const fieldMetadataList: FieldMetadata[] = objects
-      .map(t => registrar.getFieldMetadataList(t))
-      .reduce((acc, configList) => acc.concat(configList)) // flatten
-      .map(resolveThunk)
-
-    return fieldMetadataList.reduce(
-      (configMap, config) => {
-        configMap[config.name] = {
-          ...config,
-          type: compileOutputType(config.type, true),
-          args: createArgMap(source, config),
-          resolve: buildResolver(source, config),
+        configMap[name] = {
+          ...rest,
+          type: compileOutputType(type, true),
+          args: createArgMap(resolvedMetadata),
+          resolve: buildResolver(target, resolvedMetadata),
         }
 
         return configMap
@@ -68,19 +63,11 @@ export function compileFieldConfigMap(
   }
 }
 
-function createArgMap(
-  source: AnyConstructor<any>,
-  config: FieldMetadata
-): GraphQLFieldConfigArgumentMap | undefined {
-  if (config.arg && config.args) {
-    // TODO: better error message
-    throw new Error('You can only define a single parameter arg with @Arg or ')
-  }
-
-  if (config.arg && registrar.hasArg(source, config.name)) {
-    return resolveThunk(compileArg(source, config.name, config.arg)!)
-  } else if (config.args && registrar.isArgsType(config.args)) {
-    return resolveThunk(compileArgs(config.args))
+function createArgMap({arg, args}: FieldNodeMetadata): GraphQLFieldConfigArgumentMap | undefined {
+  if (arg) {
+    return resolveThunk(compileArg(arg.node, arg.type))
+  } else if (args) {
+    return resolveThunk(compileArgs(args))
   }
 
   return undefined
@@ -88,13 +75,15 @@ function createArgMap(
 
 function buildResolver(
   source: AnyConstructor<any>,
-  config: FieldMetadata
+  metadata: FieldNodeMetadata
 ): GraphQLFieldResolver<any, any> {
-  const resolver = createResolver(source.prototype, config.name) || defaultResolver(config.name)
-  const transformOutput = isWrapper(config.type) && config.type.transformOutput
+  const {type, name} = metadata
+
+  const resolver = createResolver(source.prototype, name) || defaultResolver(name)
+  const transformOutput = isWrapper(type) && type.transformOutput
 
   return ((src: any, args: ObjectLiteral, ...rest) => {
-    const mappedArgs = mapArgsForResolver(source, config, args)
+    const mappedArgs = mapArgsForResolver(metadata, args)
 
     const result = resolver(src, mappedArgs, ...rest)
 
@@ -124,23 +113,23 @@ function createResolver(
 }
 
 function mapArgsForResolver(
-  source: AnyConstructor<any>,
-  {arg, args, name}: FieldMetadata,
+  {arg, args}: FieldNodeMetadata,
   passedInArgs: ObjectLiteral
 ): Maybe<ObjectLiteral | any> {
-  if (arg && !isWrapper(arg) && isEmptyConstructor(arg) && registrar.isInputObjectType(arg)) {
-    const inputConstructorTree = createInputConstructorTree(arg)
-    return inputConstructorTree
-      ? instantiateInputConstructorTree(inputConstructorTree, passedInArgs)
-      : null
+  if (
+    arg &&
+    !isWrapper(arg.type) &&
+    isInputObjectNode(arg.type) &&
+    isEmptyConstructor(arg.type.target)
+  ) {
+    const inputConstructorTree = createInputConstructorTree(arg.type)
+    return instantiateInputConstructorTree(inputConstructorTree, passedInArgs)
   } else if (arg) {
-    const argName = getArgName(source, name)!
+    const argName = arg.node.metadata.name
     return passedInArgs[argName]
   } else if (args) {
     const inputConstructorTree = createInputConstructorTree(args)
-    return inputConstructorTree
-      ? instantiateInputConstructorTree(inputConstructorTree, passedInArgs)
-      : null
+    return instantiateInputConstructorTree(inputConstructorTree, passedInArgs)
   }
 
   return null
@@ -163,19 +152,15 @@ function instantiateInputConstructorTree<T>(
   return Object.assign(instantiated, instantiatedValues)
 }
 
-function createInputConstructorTree<T>(
-  InputClass: EmptyConstructor<T>
-): Maybe<InputConstructorNode<T>> {
-  const configThunkList = registrar.getInputFieldMetadataList(InputClass)
-  if (!configThunkList) {
-    return null
-  }
+function createInputConstructorTree<T>({
+  inputFields,
+  target,
+}: InputObjectNode | ArgsNode): InputConstructorNode<T> {
+  const children = inputFields.reduce(
+    (acc, {metadata}) => {
+      const {type, name} = resolveThunk(metadata)
 
-  const children = configThunkList.reduce(
-    (acc, configThunk) => {
-      const {type, name} = resolveThunk(configThunk)
-
-      if (!isWrapper(type) && isEmptyConstructor(type) && registrar.isInputObjectType(type)) {
+      if (!isWrapper(type) && isInputObjectNode(type) && isEmptyConstructor(type.target)) {
         const tree = createInputConstructorTree(type)
         if (tree) {
           acc[name] = tree
@@ -187,8 +172,5 @@ function createInputConstructorTree<T>(
     {} as InputConstructorChildren
   )
 
-  return {
-    constructor: InputClass,
-    children,
-  }
+  return {constructor: target, children}
 }

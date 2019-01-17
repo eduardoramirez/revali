@@ -1,12 +1,14 @@
 import 'jest'
 
 import {Field} from 'revali/decorators'
-import {registrar} from 'revali/metadata'
+import {Graph} from 'revali/graph'
 import {resolveThunk} from 'revali/utils'
 import {TSGraphQLString} from 'revali/wrappers/scalars'
 
 describe('Field', () => {
-  it('creates a field list in the registry', () => {
+  it('calls the right method on the registry', () => {
+    const spy = jest.spyOn(Graph.prototype, 'createField')
+
     class TestType {}
 
     class TestWithFields {
@@ -27,14 +29,36 @@ describe('Field', () => {
       }
     }
 
-    const fieldConfigList = registrar.getFieldMetadataList(TestWithFields)
-    expect(fieldConfigList).toHaveLength(4)
-    expect(resolveThunk(fieldConfigList[0])).toEqual({
-      type: TSGraphQLString,
-      name: 'foo',
-    })
-    expect(resolveThunk(fieldConfigList[1])).toEqual({type: TestType, name: 'bar'})
-    expect(resolveThunk(fieldConfigList[2])).toEqual({type: TSGraphQLString, name: 'baz'})
-    expect(resolveThunk(fieldConfigList[3])).toEqual({type: TSGraphQLString, name: 'biz'})
+    expect(spy).toHaveBeenCalledTimes(4)
+
+    let callParams = spy.mock.calls[0]
+    expect(callParams).toHaveLength(2)
+    expect(callParams[0]).toBe(TestWithFields)
+    let metadata = resolveThunk(callParams[1])
+    expect(metadata).toHaveProperty('name', 'foo')
+    expect(metadata).toHaveProperty('type', TSGraphQLString)
+
+    callParams = spy.mock.calls[1]
+    expect(callParams).toHaveLength(2)
+    expect(callParams[0]).toBe(TestWithFields)
+    metadata = resolveThunk(callParams[1])
+    expect(metadata).toHaveProperty('name', 'bar')
+    expect(metadata).toHaveProperty('type', TestType)
+
+    callParams = spy.mock.calls[2]
+    expect(callParams).toHaveLength(2)
+    expect(callParams[0]).toBe(TestWithFields)
+    metadata = resolveThunk(callParams[1])
+    expect(metadata).toHaveProperty('name', 'baz')
+    expect(metadata).toHaveProperty('type', TSGraphQLString)
+
+    callParams = spy.mock.calls[3]
+    expect(callParams).toHaveLength(2)
+    expect(callParams[0]).toBe(TestWithFields)
+    metadata = resolveThunk(callParams[1])
+    expect(metadata).toHaveProperty('name', 'biz')
+    expect(metadata).toHaveProperty('type', TSGraphQLString)
+
+    spy.mockRestore()
   })
 })

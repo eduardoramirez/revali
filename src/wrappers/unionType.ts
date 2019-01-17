@@ -1,8 +1,8 @@
 import {GraphQLUnionType} from 'graphql'
 
 import {compileObjectType} from 'revali/compiler'
+import {graph, isObjectNode} from 'revali/graph'
 import {AnyConstructor} from 'revali/types'
-import {findConstructor} from 'revali/utils'
 import {Wrapper} from 'revali/wrappers/Wrapper'
 
 export interface UnionTypeConfig<T> {
@@ -12,16 +12,25 @@ export interface UnionTypeConfig<T> {
 }
 
 export function unionType<T>(config: UnionTypeConfig<T>): Wrapper<T, GraphQLUnionType> {
+  const unionTypeNodes = config.types.map(target => {
+    const node = graph.getOutputTypeNode(target)
+    if (!node || !isObjectNode(node)) {
+      throw new Error()
+    }
+    return node
+  })
+
   const graphQLType = new GraphQLUnionType({
     ...config,
-    types: config.types.map(compileObjectType),
+    types: unionTypeNodes.map(compileObjectType),
     resolveType: (instance: {}) => {
-      const type = findConstructor(instance, config.types)
-      if (!type) {
+      const nodeOfType = unionTypeNodes.find(({target}) => instance instanceof target)
+
+      if (!nodeOfType) {
         // This should be impossible
         throw new Error(`Source not instance of passed types for ${config.name}`)
       }
-      return compileObjectType(type)
+      return compileObjectType(nodeOfType)
     },
   })
   return {

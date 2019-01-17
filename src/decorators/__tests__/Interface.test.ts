@@ -1,13 +1,16 @@
 import 'jest'
 
 import {InterfaceType} from 'revali/decorators'
-import {registrar} from 'revali/metadata'
+import {Graph} from 'revali/graph'
 
 describe('InterfaceType', () => {
-  it('writes the interface metadata to the registry', () => {
+  it('calls the registry with the right parameters', () => {
+    const spy = jest.spyOn(Graph.prototype, 'createInterface')
+
     @InterfaceType()
     class TestInterface {}
 
-    expect(registrar.getInterfaceMetadata(TestInterface)).toHaveProperty('name', 'TestInterface')
+    expect(spy).toBeCalledWith(TestInterface, {name: 'TestInterface'})
+    spy.mockRestore()
   })
 })

@@ -1,29 +1,26 @@
 import 'jest'
 
 import {Arg} from 'revali/decorators'
-import {registrar} from 'revali/metadata'
-import {resolveThunk} from 'revali/utils'
+import {Graph} from 'revali/graph'
 
 describe('Arg', () => {
   it('sets the config in the registrar', () => {
+    const createArgSpy = jest.spyOn(Graph.prototype, 'createArg')
+
     class Test {
       public foo(@Arg('bar') bar: string): string {
         return ''
       }
     }
 
-    const config = registrar.getArgMetadata(Test, 'foo')
-    expect(config).toBeTruthy()
-    expect(resolveThunk(config!).name).toEqual('bar')
-  })
+    expect(createArgSpy).toBeCalled()
 
-  it('allows only one arg per function', () => {
-    expect(() => {
-      class TestWithError {
-        public topic(@Arg('id') id: string, @Arg('slug') slug: string): string {
-          return ''
-        }
-      }
-    }).toThrow()
+    const callParams = createArgSpy.mock.calls[0]
+    expect(callParams).toHaveLength(3)
+    expect(callParams[0]).toBe(Test)
+    expect(callParams[1]).toBe('foo')
+    expect(callParams[2]).toHaveProperty('name', 'bar')
+
+    createArgSpy.mockRestore()
   })
 })

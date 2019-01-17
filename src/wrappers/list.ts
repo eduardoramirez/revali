@@ -1,10 +1,10 @@
 import {GraphQLList} from 'graphql'
 
 import {compileType} from 'revali/compiler'
-import {isWrapper, Wrapper, WrapperOrType} from 'revali/wrappers/Wrapper'
+import {convertToWrapperOrNode, isWrapper, Wrapper, WrapperOrType} from 'revali/wrappers/Wrapper'
 
 export function list<T>(type: WrapperOrType<T>): Wrapper<T[], GraphQLList<any>> {
-  const currentType = compileType(type, true)
+  const currentType = compileType(convertToWrapperOrNode(type), true)
   const transformOutput = isWrapper(type) && type.transformOutput
   return {
     graphQLType: new GraphQLList(currentType),

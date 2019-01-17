@@ -1,27 +1,21 @@
 import {GraphQLInputFieldConfig, GraphQLInputFieldConfigMap, Thunk} from 'graphql'
 
 import {compileInputType} from 'revali/compiler'
-import {InputFieldMetadata, registrar} from 'revali/metadata'
-import {AnyConstructor} from 'revali/types'
-import {getConstructorChain, resolveThunk} from 'revali/utils'
+import {InputFieldNode} from 'revali/graph'
+import {resolveThunk} from 'revali/utils'
 
 export function compileInputFieldConfigMap(
-  source: AnyConstructor<any>
+  nodes: InputFieldNode[]
 ): Thunk<GraphQLInputFieldConfigMap> {
   return () => {
-    const chain = getConstructorChain(source)
-
-    const inputFieldMetadataList: InputFieldMetadata[] = chain
-      .map(target => registrar.getInputFieldMetadataList(target))
-      .reduce((acc, configList) => acc.concat(...configList)) // flatten
-      .map(resolveThunk)
+    const inputFieldMetadataList = nodes.map(({metadata}) => resolveThunk(metadata))
 
     return inputFieldMetadataList.reduce(
-      (map, config) => {
-        map[config.name] = {
-          type: compileInputType(config.type, true),
-          description: config.description,
-          defaultValue: config.defaultValue,
+      (map, {type, description, defaultValue, name}) => {
+        map[name] = {
+          description,
+          defaultValue,
+          type: compileInputType(type, true),
         } as GraphQLInputFieldConfig
 
         return map

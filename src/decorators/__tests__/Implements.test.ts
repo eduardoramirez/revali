@@ -1,10 +1,12 @@
 import 'jest'
 
 import {Implements, InterfaceType, ObjectType} from 'revali/decorators'
-import {registrar} from 'revali/metadata'
+import {Graph} from 'revali/graph'
 
 describe('Implements', () => {
   it('updates the interface and object with implementers/interfaces', () => {
+    const spy = jest.spyOn(Graph.prototype, 'createImplement')
+
     @InterfaceType()
     class TestIface {}
 
@@ -12,9 +14,7 @@ describe('Implements', () => {
     @Implements(TestIface)
     class TestImplementer {}
 
-    expect(registrar.getObjectMetadata(TestImplementer)).toHaveProperty('interfaces', [TestIface])
-    expect(registrar.getInterfaceMetadata(TestIface)).toHaveProperty('implementers', [
-      TestImplementer,
-    ])
+    expect(spy).toBeCalledWith(TestImplementer, TestIface)
+    spy.mockRestore()
   })
 })

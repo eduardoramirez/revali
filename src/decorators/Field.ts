@@ -1,12 +1,12 @@
 import {GraphQLInputType, GraphQLOutputType, GraphQLResolveInfo, Thunk} from 'graphql'
 
 import {InterfaceImplementation} from 'revali/decorators/Implements'
-import {registrar} from 'revali/metadata'
+import {graph} from 'revali/graph'
 import {AnyConstructor, EmptyConstructor, MaybePromise} from 'revali/types'
 import {resolveThunk, resolveType} from 'revali/utils'
 import {WrapperOrType} from 'revali/wrappers/Wrapper'
 
-export interface FieldConfig<TReturn, TArgs = {}, TContext = any> {
+export interface FieldOptions<TReturn, TArgs = {}, TContext = any> {
   type: WrapperOrType<TReturn, GraphQLOutputType>
   description?: string
   args?: EmptyConstructor<TArgs>
@@ -27,14 +27,15 @@ export type FieldProperty<TContext, TReturn, TArgs> =
   | FieldResolverMethod<TContext, TReturn, TArgs>
 
 function FieldDecorator<TReturn, TArgs, TContext>(
-  config?: Thunk<Partial<FieldConfig<TReturn, TArgs, TContext>>>
+  config?: Thunk<Partial<FieldOptions<TReturn, TArgs, TContext>>>
 ) {
   return <TName extends string, TRArgs extends TArgs = TArgs>(
     prototype: Record<TName, FieldProperty<TContext, TReturn, TRArgs>>,
     key: TName
   ) => {
-    registrar.storeFieldMetadata(prototype, () => {
+    graph.createField(prototype.constructor, () => {
       const resolved = (config && resolveThunk(config)) || {}
+
       const type = resolveType(resolved.type, prototype, key)
 
       return {...resolved, type, name: key}
@@ -43,7 +44,7 @@ function FieldDecorator<TReturn, TArgs, TContext>(
 }
 
 export function fieldDecoratorForContext<TContext>(context: AnyConstructor<TContext>) {
-  return <TReturn, TArgs>(config?: Thunk<Partial<FieldConfig<TReturn, TArgs>>>) => {
+  return <TReturn, TArgs>(config?: Thunk<Partial<FieldOptions<TReturn, TArgs>>>) => {
     return FieldDecorator<TReturn, TArgs, TContext>({...config, context})
   }
 }
@@ -60,7 +61,7 @@ type FieldPropertyDecorator<TReturn, TArgs, TContext = undefined> = <
 interface FieldDefinitions {
   // Infer primitive types. Will not work on methods since the type for a method is,
   // for instance, `() => string`
-  <TArgs>(config?: Thunk<Partial<FieldConfig<undefined, TArgs>>>): <
+  <TArgs>(config?: Thunk<Partial<FieldOptions<undefined, TArgs>>>): <
     TName extends string,
     TSource,
     TContext,
@@ -71,7 +72,7 @@ interface FieldDefinitions {
   ) => void
 
   <TReturn, TArgs, TContext = undefined>(
-    config: Thunk<FieldConfig<TReturn, TArgs, TContext>>
+    config: Thunk<FieldOptions<TReturn, TArgs, TContext>>
   ): FieldPropertyDecorator<TReturn, TArgs, TContext>
 }
 

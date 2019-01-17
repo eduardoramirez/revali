@@ -1,7 +1,7 @@
 import {GraphQLSchema} from 'graphql'
 
 import {compileNamedTypes, compileObjectType} from 'revali/compiler'
-import {registrar} from 'revali/metadata'
+import {graph, isObjectNode} from 'revali/graph'
 import {AnyConstructor} from 'revali/types'
 
 export interface CompileSchemaOptions {
@@ -10,10 +10,39 @@ export interface CompileSchemaOptions {
 }
 
 export function compileSchema({Query, Mutation}: CompileSchemaOptions) {
-  const query = compileObjectType(Query)
-  const mutation = Mutation ? compileObjectType(Mutation) : undefined
+  const queryNode = graph.getOutputTypeNode(Query)
+  if (!queryNode) {
+    // TODO: better error msg
+    throw new Error()
+  } else if (!isObjectNode(queryNode)) {
+    // TODO: better error msg
+    throw new Error()
+  }
 
-  const types = compileNamedTypes(registrar.getUnreachableTypes())
+  const query = compileObjectType(queryNode)
 
-  return new GraphQLSchema({query, mutation, types})
+  let mutation
+  let mutationNode
+  if (Mutation) {
+    mutationNode = graph.getOutputTypeNode(Mutation)
+    if (!mutationNode) {
+      // TODO: better error msg
+      throw new Error()
+    } else if (!isObjectNode(mutationNode)) {
+      // TODO: better error msg
+      throw new Error()
+    }
+
+    mutation = compileObjectType(mutationNode)
+  }
+
+  const roots = mutationNode ? [queryNode, mutationNode] : [queryNode]
+
+  const types = compileNamedTypes(graph.getUnreachableWriteableNodes(roots))
+
+  return new GraphQLSchema({
+    query,
+    mutation,
+    types,
+  })
 }
