@@ -14,9 +14,7 @@ export enum NodeKind {
   Implement,
 }
 
-export type OutputTypeNode = ObjectNode | InterfaceNode
-export type InputTypeNode = InputObjectNode
-export type WriteableNode = OutputTypeNode | InputTypeNode
+export type WriteableNode = ObjectNode | InterfaceNode | InputObjectNode
 
 export interface Node {
   kind: NodeKind

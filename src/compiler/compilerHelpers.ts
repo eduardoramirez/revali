@@ -48,19 +48,16 @@ export const compileType = ((
     return nonNull ? new GraphQLNonNull(type) : type
   }
 
-  // TODO: better error
-  throw new Error(`Type not found for`)
-  // throw new Error(`Type not found for ${target.name}`)
+  throw new Error(`Type not found for ${nodeOrWrapper.target.name}`)
 }) as CompileTypeDefinitions
 
 export const compileNamedType = (
   nodeOrWrapper: WrapperOrNode<any, GraphQLNamedType>
 ): GraphQLNamedType => {
   const type = compileType(nodeOrWrapper)
-  if (!type || !isNamedType(type)) {
-    // TODO: better error msg
-    throw new Error(`Named type not found for`)
-    // throw new Error(`Named type not found for ${(target as Constructor<any>).name}`)
+  if (!isNamedType(type)) {
+    const name = isWrapper(nodeOrWrapper) ? typeof nodeOrWrapper.type : nodeOrWrapper.target.name
+    throw new Error(`Named type not found for ${name}`)
   }
   return type
 }
@@ -76,10 +73,9 @@ export const compileOutputType = (
   nonNull?: boolean
 ): GraphQLOutputType => {
   const type = compileType(nodeOrWrapper, nonNull)
-  if (!type || !isOutputType(type)) {
-    // TODO: better error msg
-    throw new Error(`Output type not found for`)
-    // throw new Error(`Output type not found for ${(target as Constructor<any>).name}`)
+  if (!isOutputType(type)) {
+    const name = isWrapper(nodeOrWrapper) ? typeof nodeOrWrapper.type : nodeOrWrapper.target.name
+    throw new Error(`Output type not found for ${name}`)
   }
   return type
 }
@@ -89,10 +85,9 @@ export const compileInputType = (
   nonNull?: boolean
 ): GraphQLInputType => {
   const type = compileType(nodeOrWrapper, nonNull)
-  if (!type || !isInputType(type)) {
-    // TODO: better error msg
-    throw new Error(`Input type not found for`)
-    // throw new Error(`Input type not found for ${(target as Constructor<any>).name}`)
+  if (!isInputType(type)) {
+    const name = isWrapper(nodeOrWrapper) ? typeof nodeOrWrapper.type : nodeOrWrapper.target.name
+    throw new Error(`Input type not found for ${name}`)
   }
   return type
 }

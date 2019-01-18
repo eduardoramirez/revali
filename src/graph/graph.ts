@@ -1,4 +1,5 @@
-import {GraphQLInputType, GraphQLOutputType, Thunk} from 'graphql'
+import {GraphQLInputType, GraphQLOutputType, GraphQLType, Thunk} from 'graphql'
+import {flatMap} from 'lodash'
 
 import {
   ArgNode,
@@ -7,7 +8,6 @@ import {
   ImplementNode,
   InputFieldNode,
   InputObjectNode,
-  InputTypeNode,
   InterfaceNode,
   isArgNode,
   isArgsNode,
@@ -20,10 +20,9 @@ import {
   Node,
   NodeKind,
   ObjectNode,
-  OutputTypeNode,
   WriteableNode,
 } from 'revali/graph/definitions'
-import {AnyConstructor, EmptyConstructor, Maybe} from 'revali/types'
+import {AnyConstructor, EmptyConstructor} from 'revali/types'
 import {resolveThunk} from 'revali/utils'
 import {isWrapper, WrapperOrNode, WrapperOrType} from 'revali/wrappers/Wrapper'
 
@@ -60,34 +59,33 @@ interface FieldMetadata {
 }
 
 export class Graph {
-  private inputNodes = new Map<AnyConstructor<any>, InputTypeNode>()
-  private outputNodes = new Map<AnyConstructor<any>, OutputTypeNode>()
-  private args = new Map<AnyConstructor<any>, ArgsNode>()
+  private nodes = new Map<AnyConstructor<any>, WriteableNode>()
+
+  private args = new WeakMap<AnyConstructor<any>, ArgsNode>()
   private waitingRooms = new WeakMap<AnyConstructor<any>, Node[]>()
 
   public createObject(target: AnyConstructor<any>, metadata: ObjectMetadata) {
     const childNodes = this.getWaitingRoom(target)
-
     const objectNode: ObjectNode = {
       metadata,
-      kind: NodeKind.Object,
       target,
+      kind: NodeKind.Object,
       fieldNodes: getNodeOfType(childNodes, isFieldNode),
       implementNodes: getNodeOfType(childNodes, isImplementNode),
     }
 
-    objectNode.implementNodes.forEach(ifaceNode => {
-      ifaceNode.interfaceNode.implementerNodes.push(objectNode)
+    objectNode.implementNodes.forEach(({interfaceNode}) => {
+      interfaceNode.implementerNodes.push(objectNode)
     })
 
     this.clearWaitingRoom(target)
 
-    this.outputNodes.set(target, objectNode)
+    this.nodes.set(target, objectNode)
   }
 
   public createInputObject(target: EmptyConstructor<any>, metadata: InputObjectMetadata) {
     const childNodes = this.getWaitingRoom(target)
-    const node: InputObjectNode = {
+    const inputNode: InputObjectNode = {
       target,
       metadata,
       kind: NodeKind.InputObject,
@@ -96,13 +94,12 @@ export class Graph {
 
     this.clearWaitingRoom(target)
 
-    this.inputNodes.set(target, node)
+    this.nodes.set(target, inputNode)
   }
 
   public createInterface(target: AnyConstructor<any>, metadata: InterfaceMetadata) {
     const childNodes = this.getWaitingRoom(target)
-
-    const node: InterfaceNode = {
+    const interfaceNode: InterfaceNode = {
       metadata,
       kind: NodeKind.Interface,
       target,
@@ -110,63 +107,63 @@ export class Graph {
       implementerNodes: [],
     }
 
-    this.outputNodes.set(target, node)
+    this.nodes.set(target, interfaceNode)
   }
 
   public createField(target: AnyConstructor<any>, metadata: Thunk<FieldMetadata>) {
+    const className = target.name
     const childNodes = this.getWaitingRoom(target)
-
     const fieldNode: FieldNode = {
       target,
       kind: NodeKind.Field,
       metadata: () => {
-        const {arg, args, type, ...rest} = resolveThunk(metadata)
+        const {arg, args, type, ...metadataRest} = resolveThunk(metadata)
+        const fieldName = metadataRest.name
 
-        let outType: WrapperOrNode<OutputTypeNode, GraphQLOutputType>
-        if (isWrapper(type)) {
-          outType = type
-        } else {
-          const node = this.outputNodes.get(type)
-          if (!node) {
-            throw new Error()
-          }
-          outType = node
-        }
+        const outType = this.getWrapperOrNodeFromWrapperOrType(type)
+        assertOutputType(
+          outType,
+          `Expected the type of '${className}.${fieldName}' to be ObjectType or InterfaceType.
+          }`
+        )
 
         if (args && arg) {
-          // TODO: better error msg
-          throw new Error()
+          throw new Error(
+            `Both 'arg' and 'args' are set in '${className}.${fieldName}'. You may only use one.`
+          )
         } else if (args) {
           const argsNode = this.args.get(args)
           if (!argsNode) {
-            // TODO: better error message
-            throw new Error('Could not find ArgsType class')
+            throw new Error(
+              `Args not found for '${args.name}'. Are you missing the @Args decorator?`
+            )
+          } else if (argsNode.inputFields.length === 0) {
+            throw new Error(
+              `No args found. Are you missing @InputField decorators on '${argsNode.target.name}'?`
+            )
           }
 
-          return {...rest, type: outType, args: argsNode}
+          return {...metadataRest, type: outType, args: argsNode}
         } else if (arg) {
-          const argNodes = getNodeOfType(childNodes, isArgNode)
+          const argNodes = getNodeOfType(childNodes, isArgNode).filter(
+            ({field}) => field === metadataRest.name
+          )
+
           if (argNodes.length > 1) {
-            // TODO: better error message
-            throw new Error('Unexpected number of argument nodes')
+            throw new Error(
+              `Unexpected number of @Arg uses for '${className}.${fieldName}'. Use @Args for multiple arguments.`
+            )
+          } else if (argNodes.length === 0) {
+            throw new Error(
+              `Defined the option 'arg' in '${className}.${fieldName}' but no use of @Arg found.`
+            )
           }
 
-          let argType
-          if (isWrapper(arg)) {
-            argType = arg
-          } else {
-            const node = this.inputNodes.get(arg)
-            if (!node) {
-              // TODO: better error
-              throw new Error('cant find argument type')
-            }
+          const argType = this.getWrapperOrNodeFromWrapperOrType(arg)
 
-            argType = node
-          }
-
-          return {...rest, type: outType, arg: {type: argType, node: argNodes[0]}}
+          return {...metadataRest, type: outType, arg: {type: argType, node: argNodes[0]}}
         }
-        return {...rest, type: outType}
+        return {...metadataRest, type: outType}
       },
     }
 
@@ -179,17 +176,10 @@ export class Graph {
       kind: NodeKind.InputField,
       metadata: () => {
         const {type, ...rest} = resolveThunk(metadata)
-        let wrappedType
-        if (isWrapper(type)) {
-          wrappedType = type
-        } else {
-          const node = this.inputNodes.get(type)
-          if (!node) {
-            // TODO: better error message
-            throw new Error()
-          }
-          wrappedType = node
-        }
+
+        const wrappedType = this.getWrapperOrNodeFromWrapperOrType(type)
+        assertInputType(wrappedType, `Expected '${target.name}.${rest.name}' to be an InputType.`)
+
         return {...rest, type: wrappedType}
       },
     }
@@ -216,11 +206,13 @@ export class Graph {
   }
 
   public createImplement(target: AnyConstructor<any>, iface: AnyConstructor<any>) {
-    const ifaceNode = this.outputNodes.get(iface)
-
-    if (!ifaceNode || !isInterfaceNode(ifaceNode)) {
-      // TODO: better error
-      throw new Error('Could not interface ty')
+    const ifaceNode = this.getNode(iface)
+    if (!isInterfaceNode(ifaceNode)) {
+      throw new Error(
+        `Unexpected use of @Implements in '${target.name}'. Expected '${
+          iface.name
+        }' to be InterfaceType.`
+      )
     }
 
     const node: ImplementNode = {kind: NodeKind.Implement, interfaceNode: ifaceNode}
@@ -230,28 +222,24 @@ export class Graph {
 
   // Navigation helpers
 
-  public getOutputTypeNode(target: AnyConstructor<any>): Maybe<OutputTypeNode> {
-    return this.outputNodes.get(target)
+  public getNode(target: AnyConstructor<any>): WriteableNode {
+    const node = this.nodes.get(target)
+    if (!node) {
+      throw new Error(`Could not find metadata for '${target.name}'. Is it decorated?`)
+    }
+
+    return node
   }
 
-  public getInputTypeNode(target: AnyConstructor<any>): Maybe<InputTypeNode> {
-    return this.inputNodes.get(target)
-  }
+  public getUnreachableNodes(roots: Node[]): WriteableNode[] {
+    const visitedWriteableNodes = flatMap(roots, r => this.extractWriteableNodesInPath(r))
 
-  public getUnreachableWriteableNodes(roots: Node[]): WriteableNode[] {
-    const visitedWriteableNodes = flatten(roots.map(r => this.dfs(r)))
-
-    const visitedTargetMap = new Map<AnyConstructor<any>, boolean>(
+    const visitedTargetMap = new WeakMap<AnyConstructor<any>, boolean>(
       visitedWriteableNodes.map(({target}): [AnyConstructor<any>, boolean] => [target, true])
     )
 
-    const allWriteableNodes = new Map<AnyConstructor<any>, WriteableNode>([
-      ...this.outputNodes,
-      ...this.inputNodes,
-    ])
-
     const unreachableNodes: WriteableNode[] = []
-    allWriteableNodes.forEach((node, target) => {
+    this.nodes.forEach((node, target) => {
       if (!visitedTargetMap.get(target)) {
         unreachableNodes.push(node)
       }
@@ -260,7 +248,23 @@ export class Graph {
     return unreachableNodes
   }
 
-  private dfs(root: Node): WriteableNode[] {
+  public getWrapperOrNodeFromWrapperOrType<T extends GraphQLType>(
+    wrapperOrType: WrapperOrType<any, T>
+  ): WrapperOrNode<any, T> {
+    if (isWrapper(wrapperOrType)) {
+      return wrapperOrType
+    }
+
+    return this.getNode(wrapperOrType)
+  }
+
+  public clear() {
+    this.nodes.clear()
+  }
+
+  // Performs a DFS traversal over the graph extracting the list of WriteableNodes
+  // in the path starting at `root`.
+  private extractWriteableNodesInPath(root: Node): WriteableNode[] {
     const writeableTargets = new WeakMap<AnyConstructor<any>, boolean>()
 
     const dfsHelper = (n: Node): WriteableNode[] => {
@@ -272,7 +276,7 @@ export class Graph {
         }
         writeableTargets.set(n.target, true)
 
-        children = flatten([...n.fieldNodes, ...n.implementNodes].map(cn => dfsHelper(cn)))
+        children = flatMap([...n.fieldNodes, ...n.implementNodes], cn => dfsHelper(cn))
         return [n, ...children]
       } else if (isInputObjectNode(n)) {
         if (writeableTargets.get(n.target)) {
@@ -280,7 +284,7 @@ export class Graph {
         }
 
         writeableTargets.set(n.target, true)
-        children = flatten(n.inputFields.map(cn => dfsHelper(cn)))
+        children = flatMap(n.inputFields, cn => dfsHelper(cn))
 
         return [n, ...children]
       } else if (isInterfaceNode(n)) {
@@ -289,13 +293,13 @@ export class Graph {
         }
 
         writeableTargets.set(n.target, true)
-        children = flatten(n.fieldNodes.map(cn => dfsHelper(cn)))
+        children = flatMap(n.fieldNodes, cn => dfsHelper(cn))
 
         return [n, ...children]
       } else if (isImplementNode(n)) {
         return dfsHelper(n.interfaceNode)
       } else if (isArgsNode(n)) {
-        return flatten(n.inputFields.map(cn => dfsHelper(cn)))
+        return flatMap(n.inputFields, cn => dfsHelper(cn))
       } else if (isInputFieldNode(n)) {
         const {type} = resolveThunk(n.metadata)
         if (!isWrapper(type)) {
@@ -320,7 +324,7 @@ export class Graph {
           fieldChildrenNodes.push(args)
         }
 
-        return flatten(fieldChildrenNodes.map(cn => dfsHelper(cn)))
+        return flatMap(fieldChildrenNodes, cn => dfsHelper(cn))
       }
 
       return []
@@ -328,8 +332,6 @@ export class Graph {
 
     return dfsHelper(root)
   }
-
-  // Private helpers
 
   private addToWaitingRoom(target: AnyConstructor<any>, n: Node) {
     const existingWaitingNodes = this.getWaitingRoom(target)
@@ -358,11 +360,20 @@ function getNodeOfType<T extends Node>(nodes: Node[], isNodeType: (n: Node) => n
   return fieldNodes
 }
 
-export const graph = new Graph()
-
-function flatten<T>(a: T[][]): T[] {
-  if (a.length === 0) {
-    return []
+function assertOutputType(wrapperOrNode: WrapperOrNode<any, any>, errMsg: string) {
+  if (
+    !isWrapper(wrapperOrNode) &&
+    !isInterfaceNode(wrapperOrNode) &&
+    !isObjectNode(wrapperOrNode)
+  ) {
+    throw new Error(errMsg)
   }
-  return a.reduce((acc, e) => acc.concat(e))
 }
+
+function assertInputType(wrapperOrNode: WrapperOrNode<any, any>, errMsg: string) {
+  if (!isWrapper(wrapperOrNode) && !isInputObjectNode(wrapperOrNode)) {
+    throw new Error(errMsg)
+  }
+}
+
+export const graph = new Graph()

@@ -13,8 +13,9 @@ export function Arg<TValue>(
 ): ParameterDecorator {
   return (prototype: ObjectLiteral, key: string | symbol) => {
     if (typeof key === 'symbol') {
-      // TODO: better error message
-      throw new Error('Arg: symbol is not supported')
+      throw new Error(
+        `Symbol is not supported as @Arg in '${prototype.constructor.name}.${key.toString()}'`
+      )
     }
 
     graph.createArg(prototype.constructor, key, {...config, name})

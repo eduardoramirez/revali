@@ -1,6 +1,6 @@
 import {GraphQLNonNull, GraphQLScalarType, GraphQLType} from 'graphql'
 
-import {graph, Node} from 'revali/graph'
+import {graph, WriteableNode} from 'revali/graph'
 import {AnyConstructor} from 'revali/types'
 
 export interface Wrapper<T, G extends GraphQLType = GraphQLType> {
@@ -14,7 +14,7 @@ export type WrapperOrType<T, G extends GraphQLType = GraphQLType> =
   | Wrapper<T, G>
   | AnyConstructor<T>
 
-export type WrapperOrNode<T, G extends GraphQLType = GraphQLType> = Wrapper<T, G> | Node
+export type WrapperOrNode<T, G extends GraphQLType = GraphQLType> = Wrapper<T, G> | WriteableNode
 
 export function isWrapper<T, G extends GraphQLType>(
   x: WrapperOrType<T, G> | WrapperOrNode<T, G>
@@ -23,17 +23,7 @@ export function isWrapper<T, G extends GraphQLType>(
 }
 
 export function convertToWrapperOrNode(wrapperOrType: WrapperOrType<any>): WrapperOrNode<any> {
-  if (isWrapper(wrapperOrType)) {
-    return wrapperOrType
-  }
-
-  const node = graph.getInputTypeNode(wrapperOrType) || graph.getOutputTypeNode(wrapperOrType)
-  if (!node) {
-    // TODO: better error msg
-    throw new Error()
-  }
-
-  return node
+  return graph.getWrapperOrNodeFromWrapperOrType(wrapperOrType)
 }
 
 export function resolveWrapper<T, G extends GraphQLType>(wrapper: Wrapper<T, G>, nonNull?: false): G

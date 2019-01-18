@@ -17,7 +17,7 @@ const compilerOptions: CompilerOptions = {
   noImplicitAny: true,
   target: ScriptTarget.ESNext,
   module: ModuleKind.CommonJS,
-  baseUrl: `${__dirname}/../../src`,
+  baseUrl: `${__dirname}/../../../src`,
   paths: {
     'revali/*': ['*'],
   },

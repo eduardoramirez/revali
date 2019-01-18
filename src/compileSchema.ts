@@ -10,13 +10,9 @@ export interface CompileSchemaOptions {
 }
 
 export function compileSchema({Query, Mutation}: CompileSchemaOptions) {
-  const queryNode = graph.getOutputTypeNode(Query)
-  if (!queryNode) {
-    // TODO: better error msg
-    throw new Error()
-  } else if (!isObjectNode(queryNode)) {
-    // TODO: better error msg
-    throw new Error()
+  const queryNode = graph.getNode(Query)
+  if (!isObjectNode(queryNode)) {
+    throw new Error('Query must be an ObectType')
   }
 
   const query = compileObjectType(queryNode)
@@ -24,13 +20,9 @@ export function compileSchema({Query, Mutation}: CompileSchemaOptions) {
   let mutation
   let mutationNode
   if (Mutation) {
-    mutationNode = graph.getOutputTypeNode(Mutation)
-    if (!mutationNode) {
-      // TODO: better error msg
-      throw new Error()
-    } else if (!isObjectNode(mutationNode)) {
-      // TODO: better error msg
-      throw new Error()
+    mutationNode = graph.getNode(Mutation)
+    if (!isObjectNode(mutationNode)) {
+      throw new Error('Mutation must be an ObectType')
     }
 
     mutation = compileObjectType(mutationNode)
@@ -38,11 +30,22 @@ export function compileSchema({Query, Mutation}: CompileSchemaOptions) {
 
   const roots = mutationNode ? [queryNode, mutationNode] : [queryNode]
 
-  const types = compileNamedTypes(graph.getUnreachableWriteableNodes(roots))
+  const types = compileNamedTypes(graph.getUnreachableNodes(roots))
 
-  return new GraphQLSchema({
+  const schema = new GraphQLSchema({
     query,
     mutation,
     types,
   })
+
+  // TODO: check if schema is valid
+  // const schema = this.generateFromMetadataSync(options)
+  // const {errors} = await graphql(schema, getIntrospectionQuery())
+  // if (errors) {
+  //   throw new GeneratingSchemaError(errors)
+  // }
+
+  graph.clear()
+
+  return schema
 }

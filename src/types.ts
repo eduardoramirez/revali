@@ -25,8 +25,4 @@ export type Maybe<T> = T | null | undefined
 
 export type MaybePromise<T> = T | Promise<T>
 
-export type MaybeArray<T> = T | T[]
-
-export type AnyFunction = (...args: any[]) => any
-
 export type Omit<T, K extends keyof T> = Pick<T, Exclude<keyof T, K>>

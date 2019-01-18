@@ -13,9 +13,9 @@ export interface UnionTypeConfig<T> {
 
 export function unionType<T>(config: UnionTypeConfig<T>): Wrapper<T, GraphQLUnionType> {
   const unionTypeNodes = config.types.map(target => {
-    const node = graph.getOutputTypeNode(target)
-    if (!node || !isObjectNode(node)) {
-      throw new Error()
+    const node = graph.getNode(target)
+    if (!isObjectNode(node)) {
+      throw new Error(`Unexpected use of unionType. ${target.name} must be an ObjectType.`)
     }
     return node
   })
