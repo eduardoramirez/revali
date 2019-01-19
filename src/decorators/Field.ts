@@ -11,7 +11,6 @@ export interface FieldOptions<TReturn, TArgs = {}, TContext = any> {
   description?: string
   args?: EmptyConstructor<TArgs>
   arg?: WrapperOrType<TArgs, GraphQLInputType>
-  isDeprecated?: boolean
   deprecationReason?: string
   context?: AnyConstructor<TContext>
 }

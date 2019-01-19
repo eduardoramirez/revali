@@ -1,0 +1,68 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Description generates description messages on types 1`] = `
+"type Mutation {
+  normalMutation: String!
+
+  \\"\\"\\"sample mutation description\\"\\"\\"
+  describedMutation(
+    normalArg: String!
+
+    \\"\\"\\"sample query arg description\\"\\"\\"
+    describedArg: String!
+  ): String!
+  argumentedMutation(
+    normalField: String!
+
+    \\"\\"\\"sample argument field description\\"\\"\\"
+    describedField: String!
+  ): String!
+  inputMutation(input: SampleInput!): String!
+}
+
+type Query {
+  normalQuery: String!
+
+  \\"\\"\\"sample query description\\"\\"\\"
+  describedQuery(
+    normalArg: String!
+
+    \\"\\"\\"sample query arg description\\"\\"\\"
+    describedArg: String!
+  ): String!
+  argumentedQuery(
+    normalField: String!
+
+    \\"\\"\\"sample argument field description\\"\\"\\"
+    describedField: String!
+  ): String!
+  inputQuery(input: SampleInput!): String!
+  object: SampleObject!
+}
+
+\\"\\"\\"sample input description\\"\\"\\"
+input SampleInput {
+  normalField: String!
+
+  \\"\\"\\"sample input field description\\"\\"\\"
+  describedField: String!
+}
+
+\\"\\"\\"sample object description\\"\\"\\"
+type SampleObject {
+  normalField: String!
+
+  \\"\\"\\"sample object field description\\"\\"\\"
+  describedField: String!
+
+  \\"\\"\\"sample object getter field description\\"\\"\\"
+  describedGetterField: String!
+
+  \\"\\"\\"sample object method field description\\"\\"\\"
+  methodField(
+    \\"\\"\\"sample object method arg description\\"\\"\\"
+    arg: String!
+  ): String!
+}
+"
+`;

@@ -1,7 +1,7 @@
 import {GraphQLInputType, Thunk} from 'graphql'
 
 import {graph} from 'revali/graph'
-import {Constructor} from 'revali/types'
+import {Constructor, Omit} from 'revali/types'
 import {resolveThunk, resolveType} from 'revali/utils'
 import {WrapperOrType} from 'revali/wrappers/Wrapper'
 
@@ -11,10 +11,7 @@ export interface InputFieldOptions<TValue> {
   description?: string
 }
 
-export type PrimitiveInputFieldConfig<TValue> = Exclude<
-  InputFieldOptions<TValue>,
-  {type: WrapperOrType<TValue, GraphQLInputType>}
->
+export type PrimitiveInputFieldConfig<TValue> = Omit<InputFieldOptions<TValue>, 'type'>
 
 const getDefaultValueFromPrototype = (prototype: Record<any, any>, key: string) => {
   const Args = prototype.constructor as Constructor<any>

@@ -81,7 +81,6 @@ export interface FieldNodeMetadata {
   type: WrapperOrNode<any, GraphQLOutputType>
   name: string
   description?: string
-  isDeprecated?: boolean
   deprecationReason?: string
   args?: ArgsNode
   arg?: {

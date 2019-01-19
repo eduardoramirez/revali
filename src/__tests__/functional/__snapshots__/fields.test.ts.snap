@@ -1,0 +1,23 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Fields generates a schema for valid fields 1`] = `
+"type Query {
+  sampleQuery: SampleObject!
+}
+
+type SampleNestedObject {
+  stringField: String!
+}
+
+type SampleObject {
+  implicitStringField: String!
+  objectField: SampleNestedObject!
+  explicitNullableStringField: String
+  implicitStringArrayField: [String!]!
+  nullableArrayFieldNew: [String!]
+  nullableObjectArrayField: [SampleNestedObject!]
+  arrayWithNullableItemField: [String]
+  nonnullArrayWithNullableItemField: [String]!
+}
+"
+`;

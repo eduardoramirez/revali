@@ -1,0 +1,46 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Resolvers generates schema with field resolvers correctly 1`] = `
+"type CtxResponse {
+  isContext: Boolean!
+}
+
+type Query {
+  lambdaQuery: Boolean!
+  classQuery: Boolean!
+  nullableStringQuery: String
+  implicitStringArrayQuery: [String!]!
+  explicitNullableItemArrayQuery: [String]!
+  explicitNullableArrayWithNullableItemsQuery: [String]
+  promiseStringQuery: String!
+  sampleObject: SampleObject!
+  asyncObjectQuery: SampleObject!
+  argQuery(arg1: String!): String!
+  argsQuery(stringArg: String!, numberArg: Int, inputObjectArg: SampleInput!, defaultStringArg: String! = \\"defaultStringArgDefaultValue\\", implicitDefaultStringArg: String! = \\"implicitDefaultStringArgDefaultValue\\"): String!
+  queryWithRootContext: CtxResponse!
+}
+
+input SampleInput {
+  field: String!
+  defaultStringField: String! = \\"defaultStringFieldDefaultValue\\"
+  implicitDefaultStringField: String! = \\"implicitDefaultStringFieldDefaultValue\\"
+}
+
+type SampleObject {
+  normalField: String!
+  resolverFieldWithArgs: String!
+  simpleMethodField: String!
+  methodFieldWithArg(methodArg: Int!): Int!
+  methodReturnsArg(stringArg: String, numberArg: Int!): Int!
+  objectSecretField: String!
+  argMethodField(stringArg: String!, booleanArg: Boolean!, numberArg: Float!, inputArg: SampleInput!, explicitNullableArg: String, stringArrayArg: [String!]!): Float!
+  methodIsArgsCreated(stringArg: String, numberArg: Int!): Boolean!
+  fingerprintMethod: Float!
+  methodWithInputArg(inp: SmallSampleInput!): Boolean!
+}
+
+input SmallSampleInput {
+  field: String!
+}
+"
+`;

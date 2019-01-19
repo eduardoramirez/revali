@@ -7,7 +7,7 @@ module.exports = {
   transform: {
     '^.+\\.tsx?$': 'ts-jest',
   },
-  testMatch: ['**/__tests__/**/*.test.(ts|tsx)'],
+  testMatch: ['**/__tests__/**/*.test.ts'],
   testPathIgnorePatterns: ['/node_modules/', '/lib/'],
   coverageDirectory: './coverage/',
   collectCoverageFrom: ['src/**/*.ts', '!**/*.d.ts', '!**/__tests__/**', '!testUtils.ts'],

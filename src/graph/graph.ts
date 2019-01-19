@@ -52,7 +52,6 @@ interface FieldMetadata {
   name: string
   type: WrapperOrType<any, GraphQLOutputType>
   description?: string
-  isDeprecated?: boolean
   deprecationReason?: string
   args?: EmptyConstructor<any>
   arg?: WrapperOrType<any, GraphQLInputType>
@@ -60,7 +59,6 @@ interface FieldMetadata {
 
 export class Graph {
   private nodes = new Map<AnyConstructor<any>, WriteableNode>()
-
   private args = new WeakMap<AnyConstructor<any>, ArgsNode>()
   private waitingRooms = new WeakMap<AnyConstructor<any>, Node[]>()
 

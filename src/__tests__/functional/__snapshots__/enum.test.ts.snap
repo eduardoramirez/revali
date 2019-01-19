@@ -1,0 +1,33 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Enums generates correct output for enums 1`] = `
+"enum NumberEnum {
+  One
+  Two
+  Three
+  Four
+}
+
+input NumberEnumInput {
+  numberEnumField: NumberEnum!
+}
+
+type Query {
+  getNumberEnumValue(input: NumberEnumInput!): NumberEnum!
+  getStringEnumValue(input: StringEnumInput!): StringEnum!
+  isNumberEnumEqualOne(enum: NumberEnum!): Boolean!
+  isStringEnumEqualOne(enum: StringEnum!): Boolean!
+}
+
+\\"\\"\\"custom string enum\\"\\"\\"
+enum StringEnum {
+  One
+  Two
+  Three
+}
+
+input StringEnumInput {
+  stringEnumField: StringEnum!
+}
+"
+`;

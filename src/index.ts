@@ -34,4 +34,4 @@ export {fieldDecoratorForContext} from 'revali/decorators'
 export {unsafeWrapType, wrapScalar} from 'revali/wrappers/Wrapper'
 
 // Compiler to graphql-js
-export {compileSchema} from 'revali/compileSchema'
+export {compileSchema, CompileSchemaOptions} from 'revali/compileSchema'

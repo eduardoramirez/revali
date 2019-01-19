@@ -66,7 +66,6 @@ class SomeType {
     type: nullable(Data),
     args: SomeArgs,
     description: 'some data',
-    isDeprecated: true,
     deprecationReason: 'old',
     context: Context,
   })

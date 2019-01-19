@@ -1,0 +1,22 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Deprecation Generates correct deprecation comments and directives 1`] = `
+"type Mutation {
+  normalMutation: String!
+  describedMutation: String! @deprecated(reason: \\"sample mutation deprecation reason\\")
+}
+
+type Query {
+  normalQuery: String!
+  describedQuery: String! @deprecated(reason: \\"sample query deprecation reason\\")
+  object: SampleObject!
+}
+
+type SampleObject {
+  normalField: String!
+  describedField: String! @deprecated(reason: \\"sample object field deprecation reason\\")
+  describedGetterField: String! @deprecated(reason: \\"sample object getter field deprecation reason\\")
+  methodField: String! @deprecated(reason: \\"sample object method field deprecation reason\\")
+}
+"
+`;

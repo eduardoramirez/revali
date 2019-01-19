@@ -13,6 +13,8 @@ export function compileSchema({Query, Mutation}: CompileSchemaOptions) {
   const queryNode = graph.getNode(Query)
   if (!isObjectNode(queryNode)) {
     throw new Error('Query must be an ObectType')
+  } else if (Query.name !== 'Query') {
+    throw new Error(`Query ObjectType must be name 'Query'`)
   }
 
   const query = compileObjectType(queryNode)
@@ -23,6 +25,8 @@ export function compileSchema({Query, Mutation}: CompileSchemaOptions) {
     mutationNode = graph.getNode(Mutation)
     if (!isObjectNode(mutationNode)) {
       throw new Error('Mutation must be an ObectType')
+    } else if (Mutation.name !== 'Mutation') {
+      throw new Error(`Mutation ObjectType must be name 'Mutation'`)
     }
 
     mutation = compileObjectType(mutationNode)

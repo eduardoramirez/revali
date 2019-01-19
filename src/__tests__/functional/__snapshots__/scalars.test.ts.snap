@@ -1,0 +1,28 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Scalars generates scalars correctly 1`] = `
+"\\"\\"\\"My custom scalar wohoo\\"\\"\\"
+scalar Custom
+
+scalar ObjectScalar
+
+type Query {
+  mainQuery: SampleObject!
+  returnScalar: Custom!
+  argScalar(scalar: Custom!): Boolean!
+  objectArgScalar(scalar: ObjectScalar!): Boolean!
+}
+
+type SampleObject {
+  idField: ID!
+  implicitFloatField: Float!
+  explicitFloatField: Float!
+  intField: Int!
+  implicitStringField: String!
+  explicitStringField: String!
+  implicitBooleanField: Boolean!
+  explicitBooleanField: Boolean!
+  customScalarField: Custom!
+}
+"
+`;

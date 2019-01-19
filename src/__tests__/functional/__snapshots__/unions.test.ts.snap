@@ -1,0 +1,28 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Unions generates union types correctly 1`] = `
+"type ObjectOne {
+  fieldOne: String!
+}
+
+type ObjectThree {
+  fieldThree: String!
+}
+
+type ObjectTwo {
+  fieldTwo: String!
+}
+
+type ObjectUnion {
+  unionField: OneTwoThreeUnion!
+}
+
+\\"\\"\\"OneTwoThreeUnion description\\"\\"\\"
+union OneTwoThreeUnion = ObjectOne | ObjectTwo | ObjectThree
+
+type Query {
+  getObjectOneFromUnion: OneTwoThreeUnion!
+  getObjectWithUnion: ObjectUnion!
+}
+"
+`;

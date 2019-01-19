@@ -10,14 +10,13 @@ import {ArgNode, ArgsNode} from 'revali/graph'
 import {WrapperOrNode} from 'revali/wrappers/Wrapper'
 
 export function compileArg(
-  {field, metadata}: ArgNode,
+  {metadata}: ArgNode,
   type: WrapperOrNode<any, GraphQLInputType>
 ): Thunk<GraphQLFieldConfigArgumentMap> {
   return () => {
-    const {description, defaultValue} = metadata
-
+    const {description, defaultValue, name} = metadata
     return {
-      [field]: {
+      [name]: {
         description,
         defaultValue,
         type: compileInputType(type, true),

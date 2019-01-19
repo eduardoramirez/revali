@@ -18,6 +18,7 @@ export type EnumValueConfigMap<K extends keyof any> = {[key in K]?: EnumValueCon
 
 export interface EnumTypeConfig<K extends keyof any> {
   name: string
+  description?: string
   changeCase?: EnumTypeCase
   additional?: EnumValueConfigMap<K>
 }

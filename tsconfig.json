@@ -3,14 +3,19 @@
     "outDir": "lib",
     "module": "commonjs",
     "target": "es6",
-    "lib": ["es2017", "esnext.asynciterable"],
+    "lib": [
+      "es2017",
+      "esnext.asynciterable"
+    ],
     "declaration": true,
     "sourceMap": true,
     "moduleResolution": "node",
     "rootDir": "src",
     "baseUrl": "src",
     "paths": {
-      "revali/*": ["*"]
+      "revali/*": [
+        "*"
+      ]
     },
     "forceConsistentCasingInFileNames": true,
     "importHelpers": true,
@@ -24,5 +29,10 @@
     "esModuleInterop": true,
     "resolveJsonModule": true
   },
-  "exclude": ["node_modules", "examples", "lib", "**/__tests__"]
+  "exclude": [
+    "node_modules",
+    "examples",
+    "lib",
+    "**/__tests__"
+  ]
 }
